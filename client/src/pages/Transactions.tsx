@@ -80,6 +80,9 @@ export default function Transactions() {
   const [showDeferredModal, setShowDeferredModal] = useState(false);
   const [deferredDetails, setDeferredDetails] = useState<DeferredDetails | null>(null);
 
+  const [showAddPaymentForm, setShowAddPaymentForm] = useState(false);
+  const [newPayment, setNewPayment] = useState({ payment_method: 'cash', amount: '' });
+
   useEffect(() => {
     loadTransactions();
     loadFilterOptions();
@@ -192,40 +195,71 @@ export default function Transactions() {
     setShowFilterModal(true);
   };
 
+  const handleAddPayment = async () => {
+    if (!selectedTransaction || !newPayment.amount || parseFloat(newPayment.amount) <= 0) return;
+    
+    const amount = parseFloat(newPayment.amount);
+    const remaining = selectedTransaction.total_amount - selectedTransaction.paid_amount;
+    
+    if (amount > remaining) {
+      alert(`Amount exceeds remaining balance of ₱${remaining.toFixed(2)}`);
+      return;
+    }
+
+    await api.post('/payments', {
+      transaction_id: selectedTransaction.id,
+      cashier_id: 1,
+      amount: amount,
+      payment_method: newPayment.payment_method,
+      payment_type: 'payment'
+    });
+
+    setShowAddPaymentForm(false);
+    setNewPayment({ payment_method: 'cash', amount: '' });
+    
+    const paymentsRes = await api.get(`/payments/transaction/${selectedTransaction.id}`);
+    setPayments(paymentsRes.data);
+
+    const transRes = await api.get(`/transactions/${selectedTransaction.id}`);
+    setSelectedTransaction({ ...selectedTransaction, paid_amount: transRes.data.paid_amount });
+  };
+
   return (
-    <div className="page">
+    <div className="page page-with-panel">
       <div className="page-header">
         <h1>Transactions</h1>
       </div>
 
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Total</th>
-            <th>Paid</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactions.map((t) => (
-            <tr
-              key={t.id}
-              className={selectedTransaction?.id === t.id ? 'selected' : ''}
-              onClick={() => handleRowClick(t)}
-            >
-              <td>{new Date(t.created_at).toLocaleString()}</td>
-              <td>{t.type}</td>
-              <td>₱{Number(t.total_amount).toFixed(2)}</td>
-              <td>₱{Number(t.paid_amount).toFixed(2)}</td>
-              <td><span className={`status ${t.status}`}>{t.status}</span></td>
+      <div className="table-container">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Total</th>
+              <th>Paid</th>
+              <th>Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {transactions.map((t) => (
+              <tr
+                key={t.id}
+                className={selectedTransaction?.id === t.id ? 'selected' : ''}
+                onClick={() => handleRowClick(t)}
+              >
+                <td>{new Date(t.created_at).toLocaleString()}</td>
+                <td>{t.type}</td>
+                <td>₱{Number(t.total_amount).toFixed(2)}</td>
+                <td>₱{Number(t.paid_amount).toFixed(2)}</td>
+                <td><span className={`status ${t.status}`}>{t.status}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      <div className="pinned-panel">
+      <div className="pinned-panel pinned-panel-fixed">
         <div className="pinned-field">
           <label>Transaction ID</label>
           <input
@@ -327,7 +361,7 @@ export default function Transactions() {
               </tbody>
             </table>
             <div className="modal-actions">
-              <button onClick={() => setShowProductsModal(false)}>Close</button>
+              <button className="btn-close" onClick={() => setShowProductsModal(false)}>Close</button>
             </div>
           </div>
         </div>
@@ -337,28 +371,62 @@ export default function Transactions() {
         <div className="modal" onClick={() => setShowPaymentsModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2>Payments</h2>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Amount</th>
-                  <th>Method</th>
-                  <th>Type</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.map((p) => (
-                  <tr key={p.id}>
-                    <td>{new Date(p.created_at).toLocaleString()}</td>
-                    <td>₱{Number(p.amount).toFixed(2)}</td>
-                    <td>{p.payment_method}</td>
-                    <td>{p.payment_type}</td>
+            <div className="payments-table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Type</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {payments.map((p) => (
+                    <tr key={p.id}>
+                      <td>{new Date(p.created_at).toLocaleString()}</td>
+                      <td>₱{Number(p.amount).toFixed(2)}</td>
+                      <td>{p.payment_method}</td>
+                      <td>{p.payment_type}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {showAddPaymentForm && (
+              <div className="add-payment-section">
+                <div className="form-row">
+                  <select
+                    value={newPayment.payment_method}
+                    onChange={(e) => setNewPayment({ ...newPayment, payment_method: e.target.value })}
+                  >
+                    <option value="cash">Cash</option>
+                    <option value="card">Card</option>
+                    <option value="digital">Digital</option>
+                  </select>
+                  <input
+                    type="number"
+                    placeholder="Amount"
+                    value={newPayment.amount}
+                    onChange={(e) => setNewPayment({ ...newPayment, amount: e.target.value })}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div className="form-row" style={{ justifyContent: 'flex-end' }}>
+                  <button className="btn-confirm" onClick={handleAddPayment}>Confirm</button>
+                  <button className="btn-cancel" onClick={() => {
+                    setShowAddPaymentForm(false);
+                    setNewPayment({ payment_method: 'cash', amount: '' });
+                  }}>Cancel</button>
+                </div>
+              </div>
+            )}
             <div className="modal-actions">
-              <button onClick={() => setShowPaymentsModal(false)}>Close</button>
+              {selectedTransaction?.status !== 'completed' && !showAddPaymentForm && (
+                <button onClick={() => setShowAddPaymentForm(true)}>Add Payment</button>
+              )}
+              <button className="btn-close" onClick={() => setShowPaymentsModal(false)}>Close</button>
             </div>
           </div>
         </div>
@@ -481,7 +549,7 @@ export default function Transactions() {
             <p><strong>Customer Email:</strong> {deferredDetails.customer_email}</p>
             <p><strong>Customer Address:</strong> {deferredDetails.customer_address}</p>
             <div className="modal-actions">
-              <button onClick={() => setShowDeferredModal(false)}>Close</button>
+              <button className="btn-close" onClick={() => setShowDeferredModal(false)}>Close</button>
             </div>
           </div>
         </div>

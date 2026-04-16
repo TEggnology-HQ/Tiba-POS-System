@@ -124,7 +124,6 @@ A Point of Sale (POS) web application for LAN usage, built with TypeScript on bo
 | cashier_id | BIGINT | REFERENCES users(id) |
 | created_at | TIMESTAMPTZ | DEFAULT now() |
 | updated_at | TIMESTAMPTZ | DEFAULT now() |
-| paid_amount | NUMERIC(12,2) | DEFAULT 0 |
 | total_amount | NUMERIC(12,2) | NOT NULL |
 | type | TEXT | CHECK ('immediate','deferred') |
 | status | TEXT | DEFAULT 'pending' |

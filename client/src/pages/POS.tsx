@@ -87,7 +87,6 @@ export default function POS() {
       const transactionRes = await api.post('/transactions', {
         cashier_id: user?.id,
         total_amount: total,
-        paid_amount: transactionType === 'immediate' ? paidCapped : 0,
         type: transactionType,
         items: cart.map((item) => ({
           product_type_id: item.product.id,
@@ -100,7 +99,7 @@ export default function POS() {
 
       const transactionId = transactionRes.data.id;
 
-      if (transactionType === 'immediate') {
+      if (transactionType === 'deferred' && paidCapped > 0) {
         await api.post('/payments', {
           transaction_id: transactionId,
           cashier_id: user?.id,

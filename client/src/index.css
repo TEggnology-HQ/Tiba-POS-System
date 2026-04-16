@@ -161,14 +161,22 @@ body {
 }
 
 .page {
-  padding: 1.5rem;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 60px);
+}
+
+.page-with-panel {
+  padding-bottom: 60px;
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
 }
 
 .page-header h1 {
@@ -403,7 +411,14 @@ body {
   background: white;
   border-collapse: collapse;
   border-radius: 8px;
-  overflow: hidden;
+  position: relative;
+}
+
+.table-container {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  border-radius: 8px;
 }
 
 .data-table th, .data-table td {
@@ -415,6 +430,10 @@ body {
 .data-table th {
   background: #f9f9f9;
   font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: 0 1px 0 #eee;
 }
 
 .data-table button {
@@ -474,6 +493,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
 }
 
 .modal-content {
@@ -481,7 +501,7 @@ body {
   padding: 2rem;
   border-radius: 8px;
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
 }
 
 .modal-content h2 {
@@ -499,14 +519,15 @@ body {
 .modal-actions {
   display: flex;
   gap: 1rem;
+  justify-content: flex-end;
 }
 
 .modal-actions button {
-  flex: 1;
-  padding: 10px;
+  padding: 10px 20px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .modal-actions button:first-child {
@@ -518,49 +539,105 @@ body {
   background: #eee;
 }
 
+.btn-close {
+  background: #dc3545 !important;
+  color: white;
+}
+
+.add-payment-section {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.add-payment-section .form-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.add-payment-section select,
+.add-payment-section input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  flex: 1;
+}
+
+.add-payment-section button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+.add-payment-section .btn-confirm {
+  background: #667eea;
+  color: white;
+}
+
+.add-payment-section .btn-cancel {
+  background: #eee;
+}
+
+.payments-table-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
 .pinned-panel {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   background: #fff;
   border-top: 1px solid #ddd;
-  padding: 1rem 2rem;
+  padding: 0.5rem 0.75rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.pinned-panel-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 240px;
+  right: 0;
 }
 
 .pinned-field {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.1rem;
 }
 
 .pinned-field label {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: #666;
   font-weight: 500;
 }
 
 .pinned-field input {
-  padding: 0.5rem;
+  padding: 0.35rem;
   border: 1px solid #ddd;
   border-radius: 4px;
-  width: 120px;
+  width: 90px;
   background: #f9f9f9;
   cursor: text;
 }
 
 .pinned-btn {
-  padding: 0.5rem 1rem;
+  padding: 0.35rem 0.75rem;
   background: #667eea;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  height: 36px;
 }
 
 .pinned-btn:disabled {
@@ -579,5 +656,134 @@ tr.selected {
 }
 
 .page {
-  padding-bottom: 80px;
+  padding-bottom: 1rem;
+}
+
+.table-container {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.admin-page {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.admin-header {
+  margin-bottom: 2rem;
+}
+
+.admin-header h1 {
+  font-size: 2rem;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.admin-header p {
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.admin-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.admin-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.admin-card:hover::before {
+  opacity: 1;
+}
+
+.admin-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+
+.storage-card {
+  border-left: 4px solid #667eea;
+}
+
+.storage-card::before {
+  background: linear-gradient(135deg, rgba(102,126,234,0.1) 0%, rgba(0,0,0,0) 100%);
+}
+
+.storage-card .card-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.products-card {
+  border-left: 4px solid #f59e0b;
+}
+
+.products-card::before {
+  background: linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(0,0,0,0) 100%);
+}
+
+.products-card .card-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.card-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.card-content {
+  flex: 1;
+}
+
+.card-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #1e293b;
+}
+
+.card-content p {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.card-arrow {
+  font-size: 1.5rem;
+  color: #94a3b8;
+  transition: all 0.3s ease;
+}
+
+.admin-card:hover .card-arrow {
+  transform: translateX(4px);
+  color: #667eea;
 }

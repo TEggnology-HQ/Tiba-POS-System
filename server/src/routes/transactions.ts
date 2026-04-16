@@ -7,7 +7,8 @@ router.get('/', async (req, res) => {
   try {
     const { status, type, date_from, date_to, amount_min, amount_max, ids } = req.query;
     
-    let sql = `SELECT t.*, tt.name as type, ts.name as status
+    let sql = `SELECT t.*, tt.name as type, ts.name as status,
+               COALESCE((SELECT SUM(amount) FROM payments WHERE transaction_id = t.id), 0) as paid_amount
                FROM transactions t
                JOIN transaction_type tt ON t.type = tt.id
                JOIN transaction_status ts ON t.status = ts.id
@@ -75,7 +76,8 @@ router.get('/filter-options', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const transactionResult = await query(
-      `SELECT t.*, tt.name as type, ts.name as status
+      `SELECT t.*, tt.name as type, ts.name as status,
+              COALESCE((SELECT SUM(amount) FROM payments WHERE transaction_id = t.id), 0) as paid_amount
        FROM transactions t
        JOIN transaction_type tt ON t.type = tt.id
        JOIN transaction_status ts ON t.status = ts.id
@@ -113,10 +115,10 @@ router.post('/', async (req, res) => {
     }
     
     const transactionResult = await query(
-      `INSERT INTO transactions (cashier_id, total_amount, paid_amount, type, status) 
-       VALUES ($1, $2, $3, (SELECT id FROM transaction_type WHERE name = $4), (SELECT id FROM transaction_status WHERE name = $5)) 
+      `INSERT INTO transactions (cashier_id, total_amount, type, status) 
+       VALUES ($1, $2, (SELECT id FROM transaction_type WHERE name = $3), (SELECT id FROM transaction_status WHERE name = $4)) 
        RETURNING *`,
-      [cashier_id, total, paid, type, status]
+      [cashier_id, total, type, status]
     );
     
     const transactionId = transactionResult.rows[0].id;

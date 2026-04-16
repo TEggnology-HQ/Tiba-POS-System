@@ -6,6 +6,7 @@ import POS from './pages/POS';
 import Storage from './pages/Storage';
 import Transactions from './pages/Transactions';
 import Products from './pages/Products';
+import Admin from './pages/Admin';
 import Layout from './components/Layout';
 
 interface User {
@@ -59,9 +60,14 @@ function App() {
           <Route path="/" element={<Navigate to="/welcome" />} />
           <Route element={user ? <Layout /> : <Navigate to="/login" />}>
             <Route path="/new-sale" element={<POS />} />
-            <Route path="/storage" element={<Storage />} />
             <Route path="/transactions" element={<Transactions />} />
-            <Route path="/products" element={<Products />} />
+            {user?.role === 'admin' && (
+              <>
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/storage" element={<Storage />} />
+                <Route path="/products" element={<Products />} />
+              </>
+            )}
           </Route>
         </Routes>
       </BrowserRouter>

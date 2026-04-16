@@ -21,18 +21,14 @@ export default function Layout() {
             <span className="nav-icon">+</span>
             New Sale
           </NavLink>
-          <NavLink to="/storage" className={({ isActive }) => isActive ? 'active' : ''}>
-            <span className="nav-icon">📦</span>
-            Storage
-          </NavLink>
           <NavLink to="/transactions" className={({ isActive }) => isActive ? 'active' : ''}>
             <span className="nav-icon">☰</span>
             Transactions
           </NavLink>
           {user?.role === 'admin' && (
-            <NavLink to="/users" className={({ isActive }) => isActive ? 'active' : ''}>
-              <span className="nav-icon">👤</span>
-              Users
+            <NavLink to="/admin" className={({ isActive }) => isActive ? 'active' : ''}>
+              <span className="nav-icon">⚙️</span>
+              Admin
             </NavLink>
           )}
         </nav>

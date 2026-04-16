@@ -62,7 +62,6 @@ CREATE TABLE transactions (
     cashier_id BIGINT REFERENCES users(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    paid_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
     total_amount NUMERIC(12,2) NOT NULL,
     type SMALLINT NOT NULL REFERENCES transaction_type(id),
     status SMALLINT NOT NULL REFERENCES transaction_status(id)

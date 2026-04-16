@@ -80,7 +80,6 @@ Main transaction records.
 | cashier_id | BIGINT | REFERENCES users(id) | Cashier who processed transaction |
 | created_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Creation timestamp |
 | updated_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | Last update timestamp |
-| paid_amount | NUMERIC(12,2) | NOT NULL, DEFAULT 0 | Amount paid by customer |
 | total_amount | NUMERIC(12,2) | NOT NULL | Total transaction amount |
 | type | SMALLINT | NOT NULL, REFERENCES transaction_type(id) | Link to transaction_type table |
 | status | SMALLINT | NOT NULL, REFERENCES transaction_status(id) | Link to transaction_status table |
