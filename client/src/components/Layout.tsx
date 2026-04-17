@@ -25,7 +25,7 @@ export default function Layout() {
             <span className="nav-icon">☰</span>
             Transactions
           </NavLink>
-          {user?.role === 'admin' && (
+          {(user?.role === 'owner' || user?.role === 'admin') && (
             <NavLink to="/admin" className={({ isActive }) => isActive ? 'active' : ''}>
               <span className="nav-icon">⚙️</span>
               Admin

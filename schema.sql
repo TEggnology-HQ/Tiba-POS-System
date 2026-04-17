@@ -19,18 +19,24 @@ CREATE TABLE transaction_status (
     name TEXT NOT NULL UNIQUE
 );
 
+CREATE TABLE user_roles (
+    id SMALLSERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE
+);
+
 -- Prepopulate lookup tables
 INSERT INTO product_status (name) VALUES ('listed'), ('offsale');
 INSERT INTO storage_state (name) VALUES ('onsale'), ('offsale'), ('sold');
 INSERT INTO transaction_type (name) VALUES ('immediate'), ('deferred');
 INSERT INTO transaction_status (name) VALUES ('pending'), ('completed'), ('cancelled'), ('refunded');
+INSERT INTO user_roles (name) VALUES ('owner'), ('admin'), ('cashier');
 
 -- Users table
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('cashier', 'admin')),
+    role_id SMALLINT NOT NULL REFERENCES user_roles(id),
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()

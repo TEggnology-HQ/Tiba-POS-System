@@ -38,8 +38,8 @@ export default function Products() {
       setForm({ name: '', price: '', barcode: '', status: 'listed' });
       setEditingId(null);
       loadProducts();
-    } catch {
-      alert('Failed to save product');
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to save product');
     }
   };
 
@@ -59,7 +59,7 @@ export default function Products() {
     <div className="page">
       <div className="page-header">
         <h1>Products</h1>
-        {user?.role === 'admin' && (
+        {user?.role === 'owner' || user?.role === 'admin' && (
           <button className="add-btn" onClick={() => setShowModal(true)}>Add Product</button>
         )}
       </div>
@@ -72,7 +72,7 @@ export default function Products() {
             <th>Price</th>
             <th>Barcode</th>
             <th>Status</th>
-            {user?.role === 'admin' && <th>Actions</th>}
+            {user?.role === 'owner' || user?.role === 'admin' && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -83,7 +83,7 @@ export default function Products() {
               <td>₱{Number(p.price).toFixed(2)}</td>
               <td>{p.barcode || '-'}</td>
               <td><span className={`status ${p.status}`}>{p.status}</span></td>
-              {user?.role === 'admin' && (
+              {user?.role === 'owner' || user?.role === 'admin' && (
                 <td>
                   <button onClick={() => handleEdit(p)}>Edit</button>
                   <button onClick={() => handleDelete(p.id)}>Delete</button>

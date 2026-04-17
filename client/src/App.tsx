@@ -6,13 +6,15 @@ import POS from './pages/POS';
 import Storage from './pages/Storage';
 import Transactions from './pages/Transactions';
 import Products from './pages/Products';
+import Users from './pages/Users';
 import Admin from './pages/Admin';
+import ActivityLog from './pages/ActivityLog';
 import Layout from './components/Layout';
 
 interface User {
   id: number;
   username: string;
-  role: 'cashier' | 'admin';
+  role: 'owner' | 'admin' | 'cashier';
 }
 
 interface AuthContextType {
@@ -61,11 +63,13 @@ function App() {
           <Route element={user ? <Layout /> : <Navigate to="/login" />}>
             <Route path="/new-sale" element={<POS />} />
             <Route path="/transactions" element={<Transactions />} />
-            {user?.role === 'admin' && (
+            {(user?.role === 'owner' || user?.role === 'admin') && (
               <>
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/storage" element={<Storage />} />
                 <Route path="/products" element={<Products />} />
+                <Route path="/users" element={<Users />} />
+                <Route path="/activity" element={<ActivityLog />} />
               </>
             )}
           </Route>

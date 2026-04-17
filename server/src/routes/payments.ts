@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { query } from '../db/index.js';
+import { authenticate, AuthRequest } from '../middleware/auth.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 const router = Router();
 
@@ -24,7 +26,7 @@ router.get('/transaction/:transactionId', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authenticate, async (req: AuthRequest, res) => {
   try {
     const { transaction_id, cashier_id, amount, payment_method, payment_type = 'payment' } = req.body;
     const result = await query(
@@ -32,6 +34,8 @@ router.post('/', async (req, res) => {
       [transaction_id, cashier_id, amount, payment_method, payment_type]
     );
     res.status(201).json(result.rows[0]);
+
+    await logActivity(req.user?.id || null, 'added payment', 'payments', result.rows[0].payment_id, { transaction_id, amount: Number(amount), payment_method, payment_type });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create payment' });
   }

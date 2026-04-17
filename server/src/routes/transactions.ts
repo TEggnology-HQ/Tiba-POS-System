@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { query } from '../db/index.js';
+import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 const router = Router();
 
@@ -102,7 +104,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authenticate, async (req: AuthRequest, res) => {
   try {
     const { cashier_id, total_amount, type, items, customer, paid_amount } = req.body;
     
@@ -154,14 +156,21 @@ router.post('/', async (req, res) => {
     }
     
     res.status(201).json(transactionResult.rows[0]);
+
+    await logActivity(req.user?.id || null, 'created transaction', 'transactions', transactionId, { total_amount: total, type, status });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create transaction' });
   }
 });
 
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
     const { status } = req.body;
+    const oldResult = await query('SELECT status FROM transactions WHERE id = $1', [req.params.id]);
+    const oldStatusId = oldResult.rows[0]?.status;
+    const oldStatusResult = await query('SELECT name FROM transaction_status WHERE id = $1', [oldStatusId]);
+    const oldStatus = oldStatusResult.rows[0]?.name;
+
     const result = await query(
       `UPDATE transactions 
        SET status = (SELECT id FROM transaction_status WHERE name = $1), updated_at = now() 
@@ -173,6 +182,8 @@ router.patch('/:id/status', async (req, res) => {
       return res.status(404).json({ error: 'Transaction not found' });
     }
     res.json(result.rows[0]);
+
+    await logActivity(req.user?.id || null, 'updated transaction status', 'transactions', Number(req.params.id), { old_status: oldStatus, new_status: status });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update transaction status' });
   }

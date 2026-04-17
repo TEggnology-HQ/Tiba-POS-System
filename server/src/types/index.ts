@@ -1,8 +1,14 @@
+export interface UserRole {
+  id: number;
+  name: 'owner' | 'admin' | 'cashier';
+}
+
 export interface User {
   id: number;
   username: string;
   password_hash: string;
-  role: 'cashier' | 'admin';
+  role_id: number;
+  role: 'owner' | 'admin' | 'cashier';
   status: 'active' | 'inactive';
   created_at: Date;
   updated_at: Date;

@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { query } from '../db/index.js';
+import { authenticate, requireAdmin, AuthRequest } from '../middleware/auth.js';
+import { logActivity } from '../utils/activityLogger.js';
 
 const router = Router();
 
@@ -42,7 +44,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
     const { name, price, barcode, status = 'listed' } = req.body;
     const result = await query(
@@ -52,12 +54,14 @@ router.post('/', async (req, res) => {
       [name, price, barcode, status]
     );
     res.status(201).json(result.rows[0]);
+
+    await logActivity(req.user?.id || null, 'created product', 'product_types', result.rows[0].id, { name, price: Number(price) });
   } catch (error) {
     res.status(500).json({ error: 'Failed to create product' });
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
     const { name, price, barcode, status } = req.body;
     const result = await query(
@@ -71,15 +75,22 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
     res.json(result.rows[0]);
+
+    await logActivity(req.user?.id || null, 'updated product', 'product_types', Number(req.params.id), { name, price: Number(price), status });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update product' });
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticate, requireAdmin, async (req: AuthRequest, res) => {
   try {
+    const productResult = await query('SELECT name FROM product_types WHERE id = $1', [req.params.id]);
+    const productName = productResult.rows[0]?.name;
+    
     await query('DELETE FROM product_types WHERE id = $1', [req.params.id]);
     res.status(204).send();
+
+    await logActivity(req.user?.id || null, 'deleted product', 'product_types', Number(req.params.id), { name: productName });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete product' });
   }

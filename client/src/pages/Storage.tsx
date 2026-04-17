@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import { useAuth } from '../App';
 
 interface StorageItem {
   id: number;
@@ -18,6 +19,7 @@ interface Product {
 }
 
 export default function Storage() {
+  const { user } = useAuth();
   const [items, setItems] = useState<StorageItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -46,11 +48,14 @@ export default function Storage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const entryDate = form.entry_date ? new Date(form.entry_date).toISOString() : new Date().toISOString();
+      const expireDate = form.expire_date ? new Date(form.expire_date).toISOString() : null;
+      
       for (let i = 0; i < parseInt(String(form.quantity)); i++) {
         await api.post('/storage', {
           product_type_id: form.product_type_id,
-          entry_date: form.entry_date,
-          expire_date: form.expire_date || null,
+          entry_date: entryDate,
+          expire_date: expireDate,
         });
       }
       setShowModal(false);
@@ -61,8 +66,8 @@ export default function Storage() {
         quantity: 1 
       });
       loadStorage();
-    } catch {
-      alert('Failed to add storage item');
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to add storage item');
     }
   };
 
@@ -79,7 +84,9 @@ export default function Storage() {
     <div className="page">
       <div className="page-header">
         <h1>Storage</h1>
-        <button className="add-btn" onClick={() => setShowModal(true)}>Add Item</button>
+        {user?.role === 'owner' || user?.role === 'admin' && (
+          <button className="add-btn" onClick={() => setShowModal(true)}>Add Item</button>
+        )}
       </div>
 
       <table className="data-table">
