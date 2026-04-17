@@ -1,9 +1,12 @@
 import { NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../App';
+import { useState } from 'react';
+import leftArrow from '/left-arrow.svg';
 
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -12,27 +15,34 @@ export default function Layout() {
 
   return (
     <div className="layout">
-      <aside className="sidebar">
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <h1>Tiba</h1>
+          <button 
+            className={`sidebar-toggle-btn ${collapsed ? 'collapsed' : ''}`}
+            onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <img src={leftArrow} alt="" />
+          </button>
         </div>
-        <nav className="sidebar-nav">
+        <nav className={`sidebar-nav ${collapsed ? 'collapsed' : ''}`}>
           <NavLink to="/new-sale" end className={({ isActive }) => isActive ? 'active' : ''}>
             <span className="nav-icon">+</span>
-            New Sale
+            <span className="nav-text">New Sale</span>
           </NavLink>
           <NavLink to="/transactions" className={({ isActive }) => isActive ? 'active' : ''}>
             <span className="nav-icon">☰</span>
-            Transactions
+            <span className="nav-text">Transactions</span>
           </NavLink>
           {(user?.role === 'owner' || user?.role === 'admin') && (
             <NavLink to="/admin" className={({ isActive }) => isActive ? 'active' : ''}>
               <span className="nav-icon">⚙️</span>
-              Admin
+              <span className="nav-text">Admin</span>
             </NavLink>
           )}
         </nav>
-        <div className="sidebar-footer">
+        <div className={`sidebar-footer ${collapsed ? 'collapsed' : ''}`}>
           <div className="user-info">
             <span className="username">{user?.username}</span>
             <span className="role">{user?.role}</span>
@@ -40,7 +50,7 @@ export default function Layout() {
           <button onClick={handleLogout} className="logout-btn">Logout</button>
         </div>
       </aside>
-      <main className="main-content">
+      <main className={`main-content ${collapsed ? 'expanded' : ''}`}>
         <Outlet />
       </main>
     </div>

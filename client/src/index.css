@@ -92,6 +92,62 @@ body {
   flex-direction: column;
   position: fixed;
   height: 100vh;
+  transition: width 0.3s ease;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 60px;
+}
+
+.sidebar-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-header h1 {
+  transition: opacity 0.2s ease;
+}
+
+.sidebar.collapsed .sidebar-header h1 {
+  opacity: 0;
+}
+
+.sidebar-toggle-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #334155;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: transform 0.3s ease, background 0.2s, right 0.3s ease;
+  z-index: 101;
+}
+
+.sidebar-toggle-btn:hover {
+  background: #475569;
+}
+
+.sidebar-toggle-btn img {
+  width: 16px;
+  height: 16px;
+  filter: invert(1);
+  transition: transform 0.3s ease;
+}
+
+.sidebar-toggle-btn.collapsed {
+  transform: translateY(-50%) rotate(180deg);
 }
 
 .sidebar-header {
@@ -131,6 +187,31 @@ body {
 
 .nav-icon {
   font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.nav-text {
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-nav.collapsed .nav-text {
+  opacity: 0;
+}
+
+.sidebar-footer.collapsed .user-info .username,
+.sidebar-footer.collapsed .user-info .role,
+.sidebar-footer.collapsed .logout-btn {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-footer {
+  transition: justify-content 0.3s ease;
+}
+
+.sidebar-footer.collapsed {
+  justify-content: center;
 }
 
 .sidebar-footer {
@@ -171,6 +252,11 @@ body {
 .main-content {
   flex: 1;
   margin-left: 240px;
+  transition: margin-left 0.3s ease;
+}
+
+.main-content.expanded {
+  margin-left: 60px;
 }
 
 .page {
