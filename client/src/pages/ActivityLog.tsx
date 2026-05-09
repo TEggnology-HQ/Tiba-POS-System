@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
+import { useTranslation } from 'react-i18next';
 
 interface ActivityLog {
   id: number;
@@ -21,6 +22,7 @@ interface Filters {
 }
 
 export default function ActivityLog() {
+  const { t } = useTranslation();
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [actions, setActions] = useState<string[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -97,23 +99,23 @@ export default function ActivityLog() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Activity Log</h1>
+        <h1>{t('pages.activity.title')}</h1>
         <div className="page-actions">
           <button className="btn-filter" onClick={openFilterModal}>
-            Filter
+            {t('common.filter')}
           </button>
         </div>
       </div>
 
       {(currentFilters.user_id || currentFilters.username || currentFilters.action || currentFilters.date_from || currentFilters.date_to) && (
         <div className="active-filters">
-          <span>Active Filters:</span>
-          {currentFilters.user_id && <span className="filter-tag">User ID: {currentFilters.user_id}</span>}
-          {currentFilters.username && <span className="filter-tag">Username: {currentFilters.username}</span>}
-          {currentFilters.action && <span className="filter-tag">Action: {currentFilters.action}</span>}
-          {currentFilters.date_from && <span className="filter-tag">From: {currentFilters.date_from}</span>}
-          {currentFilters.date_to && <span className="filter-tag">To: {currentFilters.date_to}</span>}
-          <button className="btn-clear-filters" onClick={handleFilterClear}>Clear All</button>
+          <span>{t('pages.activity.active_filters')}</span>
+          {currentFilters.user_id && <span className="filter-tag">{t('pages.activity.user_id')}: {currentFilters.user_id}</span>}
+          {currentFilters.username && <span className="filter-tag">{t('pages.activity.username_label')}: {currentFilters.username}</span>}
+          {currentFilters.action && <span className="filter-tag">{t('pages.activity.action')}: {currentFilters.action}</span>}
+          {currentFilters.date_from && <span className="filter-tag">{t('pages.activity.date_from')}: {currentFilters.date_from}</span>}
+          {currentFilters.date_to && <span className="filter-tag">{t('pages.activity.date_to')}: {currentFilters.date_to}</span>}
+          <button className="btn-clear-filters" onClick={handleFilterClear}>{t('pages.activity.clear_all')}</button>
         </div>
       )}
 
@@ -121,12 +123,12 @@ export default function ActivityLog() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Date/Time</th>
-              <th>Username</th>
-              <th>Action</th>
-              <th>Table</th>
-              <th>Record ID</th>
-              <th>Details</th>
+              <th>{t('pages.activity.date_time')}</th>
+              <th>{t('pages.activity.username')}</th>
+              <th>{t('pages.activity.action')}</th>
+              <th>{t('pages.activity.table')}</th>
+              <th>{t('pages.activity.record_id')}</th>
+              <th>{t('pages.activity.details')}</th>
             </tr>
           </thead>
           <tbody>
@@ -142,7 +144,7 @@ export default function ActivityLog() {
             ))}
             {activities.length === 0 && (
               <tr>
-                <td colSpan={6} className="no-data">No activity logs found</td>
+                <td colSpan={6} className="no-data">{t('pages.activity.no_data')}</td>
               </tr>
             )}
           </tbody>
@@ -152,43 +154,43 @@ export default function ActivityLog() {
       {showFilterModal && (
         <div className="modal" onClick={() => setShowFilterModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Filter Activity Log</h2>
+            <h2>{t('pages.activity.filter_title')}</h2>
             
-            <label>User ID</label>
+            <label>{t('pages.activity.user_id')}</label>
             <input
               type="number"
               value={tempFilters.user_id}
               onChange={(e) => setTempFilters({ ...tempFilters, user_id: e.target.value })}
-              placeholder="Enter User ID"
+              placeholder={t('common.search')}
             />
             
-            <label>Username</label>
+            <label>{t('pages.activity.username_label')}</label>
             <input
               type="text"
               value={tempFilters.username}
               onChange={(e) => setTempFilters({ ...tempFilters, username: e.target.value })}
-              placeholder="Search by username"
+              placeholder={t('common.search')}
             />
             
-            <label>Action Type</label>
+            <label>{t('pages.activity.action_type')}</label>
             <select
               value={tempFilters.action}
               onChange={(e) => setTempFilters({ ...tempFilters, action: e.target.value })}
             >
-              <option value="">All Actions</option>
+              <option value="">{t('common.all', 'All Actions')}</option>
               {actions.map((action) => (
                 <option key={action} value={action}>{action}</option>
               ))}
             </select>
             
-            <label>Date From</label>
+            <label>{t('pages.activity.date_from')}</label>
             <input
               type="date"
               value={tempFilters.date_from}
               onChange={(e) => setTempFilters({ ...tempFilters, date_from: e.target.value })}
             />
             
-            <label>Date To</label>
+            <label>{t('pages.activity.date_to')}</label>
             <input
               type="date"
               value={tempFilters.date_to}
@@ -196,9 +198,9 @@ export default function ActivityLog() {
             />
             
             <div className="modal-actions">
-              <button onClick={handleFilterApply}>Apply</button>
-              <button onClick={handleFilterClear}>Clear</button>
-              <button onClick={() => setShowFilterModal(false)}>Cancel</button>
+              <button onClick={handleFilterApply}>{t('common.apply')}</button>
+              <button onClick={handleFilterClear}>{t('common.clear')}</button>
+              <button onClick={() => setShowFilterModal(false)}>{t('common.cancel')}</button>
             </div>
           </div>
         </div>

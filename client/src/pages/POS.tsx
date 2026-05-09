@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { useAuth } from '../App';
+import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '../lib/formatters';
 
 interface Product {
   id: number;
@@ -16,6 +18,7 @@ interface CartItem {
 }
 
 export default function POS() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -25,6 +28,7 @@ export default function POS() {
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'digital'>('cash');
   const [paidAmount, setPaidAmount] = useState('');
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error'>('success');
 
   useEffect(() => {
     loadProducts();
@@ -84,6 +88,12 @@ export default function POS() {
       const paid = parseFloat(paidAmount);
       const paidCapped = isNaN(paid) ? 0 : Math.min(paid, total);
 
+      if (transactionType === 'immediate' && (isNaN(paid) || paid < total)) {
+        setMessageType('error');
+        setMessage(t('pages.pos.insufficient_payment'));
+        return;
+      }
+
       const transactionRes = await api.post('/transactions', {
         cashier_id: user?.id,
         total_amount: total,
@@ -95,11 +105,12 @@ export default function POS() {
           unit_price: item.product.price,
         })),
         customer: transactionType === 'deferred' ? customer : null,
+        paid_amount: paidCapped,
       });
 
       const transactionId = transactionRes.data.id;
 
-      if (transactionType === 'deferred' && paidCapped > 0) {
+      if (paidCapped > 0) {
         await api.post('/payments', {
           transaction_id: transactionId,
           cashier_id: user?.id,
@@ -109,13 +120,15 @@ export default function POS() {
       }
 
       const changeAmount = !isNaN(paid) && paid > total ? paid - total : 0;
-      setMessage(`Transaction completed!${changeAmount > 0 ? ` Change: ₱${Number(changeAmount).toFixed(2)}` : ''}`);
+      setMessageType('success');
+      setMessage(`${t('pages.pos.transaction_completed')}${changeAmount > 0 ? ` ${t('pages.pos.change')}: ${formatCurrency(changeAmount)}` : ''}`);
       setCart([]);
       setPaidAmount('');
       setCustomer({ name: '', phone: '', email: '', address: '' });
       loadProducts();
     } catch {
-      setMessage('Transaction failed');
+      setMessageType('error');
+      setMessage(t('pages.pos.transaction_failed'));
     }
   };
 
@@ -130,7 +143,7 @@ export default function POS() {
         <div className="products-panel">
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder={t('pages.pos.search_placeholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="search-input"
@@ -146,7 +159,7 @@ export default function POS() {
                   onClick={() => addToCart(product)}
                 >
                   <div className="product-name">{product.name}</div>
-                  <div className="product-price">₱{Number(product.price).toFixed(2)}</div>
+                  <div className="product-price">{formatCurrency(product.price)}</div>
                   <div className="product-stock">x{remaining}</div>
                 </div>
               );
@@ -155,13 +168,13 @@ export default function POS() {
         </div>
 
         <div className="cart-panel">
-          <h2>Cart</h2>
+          <h2>{t('pages.pos.cart')}</h2>
           <div className="cart-items">
             {cart.map((item) => (
               <div key={item.product.id} className="cart-item">
                 <div className="item-info">
                   <span className="item-name">{item.product.name}</span>
-                  <span className="item-price">₱{Number(item.product.price).toFixed(2)}</span>
+                  <span className="item-price">{formatCurrency(item.product.price)}</span>
                 </div>
                 <div className="item-controls">
                   <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)}>-</button>
@@ -174,7 +187,7 @@ export default function POS() {
           </div>
 
           <div className="cart-summary">
-            <div className="total">Total: ₱{Number(total).toFixed(2)}</div>
+            <div className="total">{t('pages.pos.total')}: {formatCurrency(total)}</div>
             
             <div className="transaction-type">
               <label>
@@ -183,7 +196,7 @@ export default function POS() {
                   checked={transactionType === 'immediate'}
                   onChange={() => setTransactionType('immediate')}
                 />
-                Immediate
+                {t('pages.pos.immediate')}
               </label>
               <label>
                 <input
@@ -191,62 +204,62 @@ export default function POS() {
                   checked={transactionType === 'deferred'}
                   onChange={() => setTransactionType('deferred')}
                 />
-                Deferred
+                {t('pages.pos.deferred')}
               </label>
             </div>
 
             {transactionType === 'immediate' ? (
               <>
                 <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'card' | 'digital')}>
-                  <option value="cash">Cash</option>
-                  <option value="card">Card</option>
-                  <option value="digital">Digital</option>
+                  <option value="cash">{t('pages.pos.cash')}</option>
+                  <option value="card">{t('pages.pos.card')}</option>
+                  <option value="digital">{t('pages.pos.digital')}</option>
                 </select>
                 <input
                   type="number"
-                  placeholder="Paid amount"
+                  placeholder={t('pages.pos.paid_amount_placeholder')}
                   value={paidAmount}
                   onChange={(e) => setPaidAmount(e.target.value)}
                 />
-                {paidAmount && <div className="change">Change: ₱{Number(change).toFixed(2)}</div>}
+                {paidAmount && <div className="change">{t('pages.pos.change')}: {formatCurrency(change)}</div>}
               </>
             ) : (
               <div className="customer-fields">
                 <input
                   type="text"
-                  placeholder="Customer name"
+                  placeholder={t('pages.pos.customer_name')}
                   value={customer.name}
                   onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
                 />
                 <input
                   type="text"
-                  placeholder="Customer phone"
+                  placeholder={t('pages.pos.customer_phone')}
                   value={customer.phone}
                   onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
                 />
                 <input
                   type="email"
-                  placeholder="Customer email"
+                  placeholder={t('pages.pos.customer_email')}
                   value={customer.email}
                   onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
                 />
                 <input
                   type="text"
-                  placeholder="Customer address"
+                  placeholder={t('pages.pos.customer_address')}
                   value={customer.address}
                   onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
                 />
               </div>
             )}
 
-            {message && <div className="message">{message}</div>}
+            {message && <div className={messageType === 'error' ? 'message-error' : 'message'}>{message}</div>}
 
             <button
               className="checkout-btn"
               onClick={handleCheckout}
               disabled={cart.length === 0}
             >
-              Complete Transaction
+              {t('pages.pos.complete_transaction')}
             </button>
           </div>
         </div>

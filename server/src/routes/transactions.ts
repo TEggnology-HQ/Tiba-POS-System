@@ -29,12 +29,12 @@ router.get('/', async (req, res) => {
       paramIndex++;
     }
     if (date_from) {
-      sql += ` AND t.created_at >= $${paramIndex}`;
+      sql += ` AND t.created_at::date >= $${paramIndex}`;
       params.push(date_from);
       paramIndex++;
     }
     if (date_to) {
-      sql += ` AND t.created_at <= $${paramIndex}`;
+      sql += ` AND t.created_at::date <= $${paramIndex}`;
       params.push(date_to);
       paramIndex++;
     }

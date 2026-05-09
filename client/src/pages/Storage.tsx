@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { useAuth } from '../App';
+import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '../lib/formatters';
 
 interface StorageItem {
   id: number;
@@ -19,6 +21,7 @@ interface Product {
 }
 
 export default function Storage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [items, setItems] = useState<StorageItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -67,7 +70,7 @@ export default function Storage() {
       });
       loadStorage();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to add storage item');
+      alert(err.response?.data?.error || t('pages.storage.failed_add'));
     }
   };
 
@@ -76,34 +79,34 @@ export default function Storage() {
       await api.patch(`/storage/${id}`, { state });
       loadStorage();
     } catch {
-      alert('Failed to update state');
+      alert(t('pages.storage.failed_update'));
     }
   };
 
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Storage</h1>
+        <h1>{t('pages.storage.title')}</h1>
         {user?.role === 'owner' || user?.role === 'admin' && (
-          <button className="add-btn" onClick={() => setShowModal(true)}>Add Item</button>
+          <button className="add-btn" onClick={() => setShowModal(true)}>{t('pages.storage.add_item')}</button>
         )}
       </div>
 
       <table className="data-table">
         <thead>
           <tr>
-            <th>Product Name</th>
-            <th>Price</th>
-            <th>Entry Date</th>
-            <th>Expire Date</th>
-            <th>State</th>
+            <th>{t('pages.storage.product_name')}</th>
+            <th>{t('pages.storage.price')}</th>
+            <th>{t('pages.storage.entry_date')}</th>
+            <th>{t('pages.storage.expire_date')}</th>
+            <th>{t('pages.storage.state')}</th>
           </tr>
         </thead>
         <tbody>
           {items.map((item) => (
             <tr key={item.id}>
               <td>{item.product_name}</td>
-              <td>₱{Number(item.price).toFixed(2)}</td>
+              <td>{formatCurrency(item.price)}</td>
               <td>{new Date(item.entry_date).toLocaleString()}</td>
               <td>{item.expire_date ? new Date(item.expire_date).toLocaleDateString() : '-'}</td>
               <td>
@@ -112,9 +115,9 @@ export default function Storage() {
                   onChange={(e) => updateState(item.id, e.target.value)}
                   className="state-select"
                 >
-                  <option value="onsale">On Sale</option>
-                  <option value="offsale">Off Sale</option>
-                  <option value="sold">Sold</option>
+                  <option value="onsale">{t('pages.storage.onsale')}</option>
+                  <option value="offsale">{t('pages.storage.offsale')}</option>
+                  <option value="sold">{t('pages.storage.sold')}</option>
                 </select>
               </td>
             </tr>
@@ -125,16 +128,16 @@ export default function Storage() {
       {showModal && (
         <div className="modal">
           <div className="modal-content">
-            <h2>Add Storage Item</h2>
+            <h2>{t('pages.storage.add_item')}</h2>
             <form onSubmit={handleSubmit}>
               <select 
                 value={form.product_type_id} 
                 onChange={(e) => setForm({ ...form, product_type_id: e.target.value })}
                 required
               >
-                <option value="">Select Product</option>
+                <option value="">{t('pages.storage.select_product')}</option>
                 {products.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name} - ₱{Number(p.price).toFixed(2)}</option>
+                  <option key={p.id} value={p.id}>{p.name} - {formatCurrency(p.price)}</option>
                 ))}
               </select>
               <input
@@ -145,21 +148,21 @@ export default function Storage() {
               />
               <input
                 type="datetime-local"
-                placeholder="Expire Date (optional)"
+                placeholder={t('pages.storage.expire_date')}
                 value={form.expire_date}
                 onChange={(e) => setForm({ ...form, expire_date: e.target.value })}
               />
               <input
                 type="number"
-                placeholder="Quantity"
+                placeholder={t('pages.storage.quantity')}
                 min="1"
                 value={form.quantity}
                 onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })}
                 required
               />
               <div className="modal-actions">
-                <button type="submit">Add</button>
-                <button type="button" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit">{t('common.add', 'Add')}</button>
+                <button type="button" onClick={() => setShowModal(false)}>{t('common.cancel')}</button>
               </div>
             </form>
           </div>

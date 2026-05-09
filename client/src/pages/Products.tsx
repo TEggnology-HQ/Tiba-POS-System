@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { useAuth } from '../App';
+import { useTranslation } from 'react-i18next';
+import { formatCurrency } from '../lib/formatters';
 
 interface Product {
   id: number;
@@ -11,6 +13,7 @@ interface Product {
 }
 
 export default function Products() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [showModal, setShowModal] = useState(false);
@@ -39,7 +42,7 @@ export default function Products() {
       setEditingId(null);
       loadProducts();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to save product');
+      alert(err.response?.data?.error || t('common.save', 'Failed to save product'));
     }
   };
 
@@ -50,7 +53,7 @@ export default function Products() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this product?')) return;
+    if (!confirm(t('pages.products.delete_confirm'))) return;
     await api.delete(`/products/${id}`);
     loadProducts();
   };
@@ -58,21 +61,21 @@ export default function Products() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Products</h1>
+        <h1>{t('pages.products.title')}</h1>
         {user?.role === 'owner' || user?.role === 'admin' && (
-          <button className="add-btn" onClick={() => setShowModal(true)}>Add Product</button>
+          <button className="add-btn" onClick={() => setShowModal(true)}>{t('pages.products.add_product')}</button>
         )}
       </div>
 
       <table className="data-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Price</th>
-            <th>Barcode</th>
-            <th>Status</th>
-            {user?.role === 'owner' || user?.role === 'admin' && <th>Actions</th>}
+            <th>{t('pages.products.id')}</th>
+            <th>{t('pages.products.name')}</th>
+            <th>{t('pages.products.price')}</th>
+            <th>{t('pages.products.barcode')}</th>
+            <th>{t('pages.products.status')}</th>
+            {user?.role === 'owner' || user?.role === 'admin' && <th>{t('pages.products.actions')}</th>}
           </tr>
         </thead>
         <tbody>
@@ -80,13 +83,13 @@ export default function Products() {
             <tr key={p.id}>
               <td>#{p.id}</td>
               <td>{p.name}</td>
-              <td>₱{Number(p.price).toFixed(2)}</td>
+              <td>{formatCurrency(p.price)}</td>
               <td>{p.barcode || '-'}</td>
-              <td><span className={`status ${p.status}`}>{p.status}</span></td>
+              <td><span className={`status ${p.status}`}>{t(`pages.products.${p.status}`)}</span></td>
               {user?.role === 'owner' || user?.role === 'admin' && (
                 <td>
-                  <button onClick={() => handleEdit(p)}>Edit</button>
-                  <button onClick={() => handleDelete(p.id)}>Delete</button>
+                  <button onClick={() => handleEdit(p)}>{t('common.edit')}</button>
+                  <button onClick={() => handleDelete(p.id)}>{t('common.delete')}</button>
                 </td>
               )}
             </tr>
@@ -97,36 +100,36 @@ export default function Products() {
       {showModal && (
         <div className="modal">
           <div className="modal-content">
-            <h2>{editingId ? 'Edit' : 'Add'} Product</h2>
+            <h2>{editingId ? t('common.edit') : t('common.create')} {t('pages.products.name')}</h2>
             <form onSubmit={handleSubmit}>
               <input
                 type="text"
-                placeholder="Product name"
+                placeholder={t('pages.products.name')}
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
               />
               <input
                 type="number"
-                placeholder="Price"
+                placeholder={t('pages.products.price')}
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
                 required
               />
               <input
                 type="text"
-                placeholder="Barcode"
+                placeholder={t('pages.products.barcode')}
                 value={form.barcode}
                 onChange={(e) => setForm({ ...form, barcode: e.target.value })}
               />
               <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                <option value="listed">Listed</option>
-                <option value="offsale">Off Sale</option>
+                <option value="listed">{t('pages.products.listed')}</option>
+                <option value="offsale">{t('pages.products.offsale')}</option>
               </select>
               <div className="modal-actions">
-                <button type="submit">Save</button>
+                <button type="submit">{t('common.save')}</button>
                 <button type="button" onClick={() => { setShowModal(false); setEditingId(null); }}>
-                  Cancel
+                  {t('common.cancel')}
                 </button>
               </div>
             </form>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 import { useAuth } from '../App';
+import { useTranslation } from 'react-i18next';
 import LockLocked from '../../../lock-locked.svg';
 import LockUnlocked from '../../../lock-unlocked.svg';
 
@@ -8,7 +9,6 @@ interface User {
   id: number;
   username: string;
   role_id: number;
-  role: string;
   role_name: string;
   status: string;
   created_at: string;
@@ -20,6 +20,7 @@ interface UserRole {
 }
 
 export default function Users() {
+  const { t } = useTranslation();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<UserRole[]>([]);
@@ -35,8 +36,13 @@ export default function Users() {
   }, []);
 
   const loadUsers = async () => {
-    const res = await api.get('/users');
-    setUsers(res.data);
+    try {
+      const res = await api.get('/users');
+      setUsers(res.data);
+    } catch (err: any) {
+      console.error('Failed to load users:', err);
+      alert(err.response?.data?.error || 'Failed to fetch users');
+    }
   };
 
   const loadRoles = async () => {
@@ -66,7 +72,7 @@ export default function Users() {
       setEditingId(null);
       loadUsers();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to save user');
+      alert(err.response?.data?.error || t('common.save', 'Failed to save user'));
     }
   };
 
@@ -81,12 +87,12 @@ export default function Users() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this user?')) return;
+    if (!confirm(t('pages.users.delete_confirm'))) return;
     try {
       await api.delete(`/users/${id}`);
       loadUsers();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to delete user');
+      alert(err.response?.data?.error || t('common.delete', 'Failed to delete user'));
     }
   };
 
@@ -125,16 +131,16 @@ export default function Users() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Users</h1>
+        <h1>{t('pages.users.title')}</h1>
         <button className="add-btn" onClick={() => { setEditingId(null); setForm({ username: '', password: '', role_id: currentUser?.role === 'admin' ? '3' : '' }); setShowModal(true); }}>
-          Add User
+          {t('pages.users.add_user')}
         </button>
       </div>
 
       <div className="filters">
         <input
           type="text"
-          placeholder="Search users..."
+          placeholder={t('pages.users.search_users')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="search-input"
@@ -146,36 +152,44 @@ export default function Users() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Username</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Created</th>
-              <th>Actions</th>
+              <th>{t('pages.users.id')}</th>
+              <th>{t('pages.users.username')}</th>
+              <th>{t('pages.users.role')}</th>
+              <th>{t('pages.users.status')}</th>
+              <th>{t('pages.users.created')}</th>
+              <th>{t('pages.users.actions')}</th>
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((user) => (
-              <tr key={user.id} className={user.id === currentUser?.id ? 'current-user-row' : ''}>
-                <td>{user.id}</td>
-                <td>{user.username}</td>
-                <td>
-                  <span className={`role-badge ${user.role_name}`}>
-                    {user.role_name}
-                  </span>
-                </td>
-                <td>
-                  <span className={`status ${user.status}`}>
-                    {user.status}
-                  </span>
-                </td>
-                <td>{new Date(user.created_at).toLocaleDateString()}</td>
-                <td>
-                  {canEdit(user) && <button onClick={() => handleEdit(user)}>Edit</button>}
-                  {canDelete(user) && <button className="btn-delete" onClick={() => handleDelete(user.id)}>Delete</button>}
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <tr key={user.id} className={user.id === currentUser?.id ? 'current-user-row' : ''}>
+                  <td>{user.id}</td>
+                  <td>{user.username}</td>
+                  <td>
+                    <span className={`role-badge ${user.role_name}`}>
+                      {user.role_name}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`status ${user.status}`}>
+                      {user.status}
+                    </span>
+                  </td>
+                  <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                  <td>
+                    {canEdit(user) && <button onClick={() => handleEdit(user)}>{t('common.edit')}</button>}
+                    {canDelete(user) && <button className="btn-delete" onClick={() => handleDelete(user.id)}>{t('common.delete')}</button>}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+                  {t('pages.activity.no_data', 'No users found')}
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
@@ -183,11 +197,11 @@ export default function Users() {
       {showModal && (
         <div className="modal">
           <div className="modal-content">
-            <h2>{editingId ? 'Edit User' : 'Add User'}</h2>
+            <h2>{editingId ? t('common.edit') : t('common.create')} {t('pages.users.username')}</h2>
             <form onSubmit={handleSubmit}>
               <input
                 type="text"
-                placeholder="Username"
+                placeholder={t('pages.users.username')}
                 value={form.username}
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
                 required
@@ -197,7 +211,7 @@ export default function Users() {
               <div className="password-input-wrapper">
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder={editingId ? 'New Password (leave blank to keep)' : 'Password'}
+                  placeholder={editingId ? t('pages.users.new_password') : t('common.password')}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required={!editingId}
@@ -217,7 +231,7 @@ export default function Users() {
                 required={!editingId}
                 disabled={isOwnProfile}
               >
-                <option value="">Select Role</option>
+                <option value="">{t('pages.users.select_role')}</option>
                 {getFilteredRoles().map((role) => (
                   <option key={role.id} value={role.id}>
                     {role.name}
@@ -227,13 +241,13 @@ export default function Users() {
               {isOwnProfile && (
                 <p className="info-text">
                   {currentUser?.role === 'owner' 
-                    ? 'You can only change your password and username' 
-                    : 'You can only change your password'}
+                    ? t('pages.users.info_owner') 
+                    : t('pages.users.info_admin')}
                 </p>
               )}
               <div className="modal-actions">
-                <button type="submit">{editingId ? 'Update' : 'Create'}</button>
-                <button type="button" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit">{editingId ? t('common.update') : t('common.create')}</button>
+                <button type="button" onClick={() => setShowModal(false)}>{t('common.cancel')}</button>
               </div>
             </form>
           </div>

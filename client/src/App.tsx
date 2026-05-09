@@ -9,7 +9,9 @@ import Products from './pages/Products';
 import Users from './pages/Users';
 import Admin from './pages/Admin';
 import ActivityLog from './pages/ActivityLog';
+import Settings from './pages/Settings';
 import Layout from './components/Layout';
+import { preferencesService } from './lib/preferencesService';
 
 interface User {
   id: number;
@@ -39,11 +41,13 @@ function App() {
   });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
 
-  const login = (user: User, token: string) => {
+  const login = async (user: User, token: string) => {
     setUser(user);
     setToken(token);
     localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('token', token);
+
+    await preferencesService.applyLanguage(user.id);
   };
 
   const logout = () => {
@@ -62,6 +66,7 @@ function App() {
           <Route path="/" element={<Navigate to="/welcome" />} />
           <Route element={user ? <Layout /> : <Navigate to="/login" />}>
             <Route path="/new-sale" element={<POS />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/transactions" element={<Transactions />} />
             {(user?.role === 'owner' || user?.role === 'admin') && (
               <>

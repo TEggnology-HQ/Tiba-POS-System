@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import './Welcome.css';
 
 export default function Welcome() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,7 +16,7 @@ export default function Welcome() {
 
   return (
     <div className="welcome-container">
-      <h1 className="welcome-text">Welcome to Tiba.</h1>
+      <h1 className="welcome-text">{t('pages.welcome.text')}</h1>
     </div>
   );
 }

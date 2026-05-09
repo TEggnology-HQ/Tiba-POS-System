@@ -1,0 +1,22 @@
+{
+  "productName": "Tiba POS",
+  "version": "1.0.0",
+  "identifier": "com.tiba.pos",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:3000",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Tiba POS",
+        "width": 1200,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ]
+  }
+}

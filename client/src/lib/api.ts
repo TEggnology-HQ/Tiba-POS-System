@@ -12,4 +12,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export const setApiBaseUrl = (url: string) => {
+  api.defaults.baseURL = url;
+};
+
+export const getApiBaseUrl = () => {
+  return api.defaults.baseURL;
+};
+
 export default api;

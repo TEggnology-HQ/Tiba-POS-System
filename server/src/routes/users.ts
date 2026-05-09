@@ -11,7 +11,7 @@ router.get('/', authenticate, requireAdmin, async (req: AuthRequest, res) => {
     const result = await query(
       `SELECT u.id, u.username, u.role_id, u.status, u.created_at, ur.name as role_name
        FROM users u
-       JOIN user_roles ur ON u.role_id = ur.id
+       LEFT JOIN user_roles ur ON u.role_id = ur.id
        ORDER BY u.id`
     );
     res.json(result.rows);
