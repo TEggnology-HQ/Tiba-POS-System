@@ -13,7 +13,8 @@ api.interceptors.request.use((config) => {
 });
 
 export const setApiBaseUrl = (url: string) => {
-  api.defaults.baseURL = url;
+  const baseUrl = url.endsWith('/api') ? url : `${url.replace(/\/$/, '')}/api`;
+  api.defaults.baseURL = baseUrl;
 };
 
 export const getApiBaseUrl = () => {

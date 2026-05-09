@@ -23,6 +23,10 @@ app.use('/api/activity', activityRoutes);
 app.use('/api/storage', storageRoutes);
 app.use('/api/users', userRoutes);
 
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 app.get('/api/roles', async (req, res) => {
   try {
     const result = await query('SELECT id, name FROM user_roles ORDER BY id');

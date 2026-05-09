@@ -1,4 +1,5 @@
 import i18n from '../i18n';
+import { tauriService } from './tauriService';
 
 export const preferencesService = {
   /**
@@ -13,9 +14,13 @@ export const preferencesService = {
   /**
    * Saves the language preference for a specific user.
    */
-  setLanguage: (userId: number, lang: string): void => {
+  setLanguage: async (userId: number, lang: string): Promise<void> => {
     localStorage.setItem(`user_lang_${userId}`, lang);
     i18n.changeLanguage(lang);
+
+    if (window.__TAURI_INTERNALS__) {
+      await tauriService.saveLanguage(lang);
+    }
   },
 
   /**

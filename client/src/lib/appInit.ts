@@ -4,7 +4,7 @@ import { tauriService } from './tauriService';
 import i18n from '../i18n';
 
 export async function initApp() {
-  let serverUrl = localStorage.getItem('server_url');
+  let serverUrl = localStorage.getItem('server_url') || 'http://pos-server.local:3001';
   let language = localStorage.getItem('user_lang_1');
 
   if (window.__TAURI_INTERNALS__) {

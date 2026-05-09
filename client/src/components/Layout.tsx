@@ -43,12 +43,8 @@ export default function Layout() {
               <span className="nav-icon">⚙️</span>
               <span className="nav-text">{t('nav.admin')}</span>
             </NavLink>
-          )}
-          <NavLink to="/settings" className={({ isActive }) => isActive ? 'active' : ''}>
-            <span className="nav-icon">⚙️</span>
-            <span className="nav-text">{t('nav.settings', 'Settings')}</span>
-          </NavLink>
-          <div className="sidebar-language-section">
+           )}
+           <div className="sidebar-language-section">
             <LanguageSwitcher />
           </div>
         </nav>

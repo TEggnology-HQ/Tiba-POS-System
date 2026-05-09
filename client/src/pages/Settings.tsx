@@ -7,7 +7,6 @@ import { tauriService } from '../lib/tauriService';
 export default function Settings() {
   const { t } = useTranslation();
   const [serverUrl, setServerUrl] = useState('http://pos-server.local:3001');
-  const [language, setLanguage] = useState('en');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -16,18 +15,15 @@ export default function Settings() {
 
   const loadSettings = async () => {
     let savedUrl = localStorage.getItem('server_url');
-    let savedLang = localStorage.getItem('user_lang_1');
 
     if (window.__TAURI_INTERNALS__) {
       const settings = await tauriService.getSettings();
       if (settings) {
         savedUrl = settings.server_url || savedUrl;
-        savedLang = settings.language || savedLang;
       }
     }
 
     if (savedUrl) setServerUrl(savedUrl);
-    if (savedLang) setLanguage(savedLang);
   };
 
   const handleSave = async () => {
@@ -36,12 +32,8 @@ export default function Settings() {
       localStorage.setItem('server_url', serverUrl);
       setApiBaseUrl(serverUrl);
       
-      // Save language
-      await preferencesService.setLanguage(1, language);
-
       if (window.__TAURI_INTERNALS__) {
         await tauriService.saveServerUrl(serverUrl);
-        await tauriService.saveLanguage(language);
       }
       
       setSaved(true);
@@ -54,12 +46,17 @@ export default function Settings() {
 
   const handleTestConnection = async () => {
     try {
-      const testApi = (await import('../lib/api')).default;
-      await testApi.get('/health'); // Assuming server has a health endpoint
+      const axios = (await import('axios')).default;
+      const baseUrl = serverUrl.endsWith('/api') ? serverUrl : `${serverUrl.replace(/\/$/, '')}/api`;
+      await axios.get(`${baseUrl}/health`);
       alert(t('common.save', 'Connection successful!'));
     } catch {
       alert(t('common.error', 'Connection failed. Please check the URL.'));
     }
+  };
+
+  const handleResetToDefault = () => {
+    setServerUrl('http://pos-server.local:3001');
   };
 
   return (
@@ -81,15 +78,9 @@ export default function Settings() {
           <button onClick={handleTestConnection} className="test-btn">
             {t('pages.settings.test_connection', 'Test Connection')}
           </button>
-        </div>
-
-        <div className="form-group">
-          <label>{t('pages.settings.language', 'Language')}</label>
-          <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-            <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="ar">العربية</option>
-          </select>
+          <button onClick={handleResetToDefault} className="default-btn">
+            {t('pages.settings.default', 'Default')}
+          </button>
         </div>
 
         <button onClick={handleSave} className="save-btn">

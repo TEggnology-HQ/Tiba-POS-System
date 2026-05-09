@@ -19,9 +19,9 @@ export default function LanguageSwitcher() {
     return SUPPORTED_LANGUAGES.find(l => l.code === i18n.language) || SUPPORTED_LANGUAGES[0];
   };
 
-  const handleChange = (code: string) => {
+  const handleChange = async (code: string) => {
     if (user) {
-      preferencesService.setLanguage(user.id, code);
+      await preferencesService.setLanguage(user.id, code);
     } else {
       i18n.changeLanguage(code);
     }

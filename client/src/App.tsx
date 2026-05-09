@@ -66,10 +66,10 @@ function App() {
           <Route path="/" element={<Navigate to="/welcome" />} />
           <Route element={user ? <Layout /> : <Navigate to="/login" />}>
             <Route path="/new-sale" element={<POS />} />
-            <Route path="/settings" element={<Settings />} />
             <Route path="/transactions" element={<Transactions />} />
             {(user?.role === 'owner' || user?.role === 'admin') && (
               <>
+                <Route path="/settings" element={<Settings />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/storage" element={<Storage />} />
                 <Route path="/products" element={<Products />} />
