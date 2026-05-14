@@ -1,7 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 
+export interface TauriSettings {
+  server_url?: string;
+  language?: string;
+}
+
 export const tauriService = {
-  async getSettings() {
+  async getSettings(): Promise<TauriSettings | null> {
     try {
       return await invoke('get_settings');
     } catch (error) {
@@ -28,7 +33,7 @@ export const tauriService = {
     }
   },
 
-  async getSystemLocale() {
+  async getSystemLocale(): Promise<string> {
     try {
       return await invoke('get_system_locale');
     } catch (error) {

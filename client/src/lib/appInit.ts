@@ -1,5 +1,4 @@
 import { setApiBaseUrl } from './api';
-import { preferencesService } from './preferencesService';
 import { tauriService } from './tauriService';
 import i18n from '../i18n';
 

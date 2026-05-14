@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { setApiBaseUrl } from '../lib/api';
-import { preferencesService } from '../lib/preferencesService';
 import { tauriService } from '../lib/tauriService';
 
 export default function Settings() {
