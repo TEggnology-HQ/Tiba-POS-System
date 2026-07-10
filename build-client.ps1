@@ -24,9 +24,9 @@ $ScriptRoot = Split-Path -Parent $PSCommandPath
 
 # ── helpers ──────────────────────────────────────────────────────────
 function Step  { Write-Host "`n>>> $($args -join ' ')" -ForegroundColor Cyan }
-function Ok    { Write-Host "  ✓ $($args -join ' ')" -ForegroundColor Green }
+function Ok    { Write-Host "  [+] $($args -join ' ')" -ForegroundColor Green }
 function Warn  { Write-Host "  ! $($args -join ' ')" -ForegroundColor Yellow }
-function Fail  { Write-Host "  ✘ $($args -join ' ')" -ForegroundColor Red; exit 1 }
+function Fail  { Write-Host "  [-] $($args -join ' ')" -ForegroundColor Red; exit 1 }
 
 function Test-Command($Name) {
     try   { $null = Get-Command $Name -ErrorAction Stop; return $true }

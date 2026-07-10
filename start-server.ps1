@@ -22,7 +22,7 @@ Write-Host "Launching POS containers..." -ForegroundColor Cyan
 wsl -d $WslDistro -- docker compose -f "$ProjectDir/docker-compose.yml" up -d
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "✓ POS server containers are running" -ForegroundColor Green
+    Write-Host "[+] POS server containers are running" -ForegroundColor Green
 } else {
     Write-Host "! Failed to start containers. Check your .env and project path." -ForegroundColor Red
 }

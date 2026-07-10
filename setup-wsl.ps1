@@ -13,9 +13,9 @@ $ErrorActionPreference = "Stop"
 
 # ── helpers ──────────────────────────────────────────────────────────
 function Step { Write-Host "`n>>> $($args -join ' ')" -ForegroundColor Cyan }
-function Ok   { Write-Host "  ✓ $($args -join ' ')" -ForegroundColor Green }
+function Ok   { Write-Host "  [+] $($args -join ' ')" -ForegroundColor Green }
 function Warn { Write-Host "  ! $($args -join ' ')" -ForegroundColor Yellow }
-function Fail { Write-Host "  ✘ $($args -join ' ')" -ForegroundColor Red; exit 1 }
+function Fail { Write-Host "  [-] $($args -join ' ')" -ForegroundColor Red; exit 1 }
 
 $IsAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent())
     .IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)

@@ -24,7 +24,7 @@ $shortcutPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Tiba
 if ($Remove) {
     if (Test-Path $shortcutPath) {
         Remove-Item $shortcutPath -Force
-        Write-Host "✓ Removed startup entry" -ForegroundColor Green
+        Write-Host "[+] Removed startup entry" -ForegroundColor Green
     } else {
         Write-Host "! No startup entry exists" -ForegroundColor Yellow
     }
@@ -32,7 +32,7 @@ if ($Remove) {
 }
 
 if (-not (Test-Path $TargetPath)) {
-    Write-Host "✘ Executable not found at: $TargetPath" -ForegroundColor Red
+    Write-Host "[-] Executable not found at: $TargetPath" -ForegroundColor Red
     Write-Host "  Either install the MSI first, or pass -TargetPath with the correct location." -ForegroundColor Yellow
     exit 1
 }
@@ -44,6 +44,6 @@ $shortcut.Description = "Tiba POS - Point of Sale System"
 $shortcut.WorkingDirectory = Split-Path $TargetPath -Parent
 $shortcut.Save()
 
-Write-Host "✓ Startup entry created at:" -ForegroundColor Green
+Write-Host "[+] Startup entry created at:" -ForegroundColor Green
 Write-Host "  $shortcutPath" -ForegroundColor White
 Write-Host "  → $TargetPath" -ForegroundColor Gray

@@ -14,9 +14,9 @@ $ScriptRoot = Split-Path -Parent $PSCommandPath
 
 # ── helpers ──────────────────────────────────────────────────────────
 function Step  { Write-Host "`n$('='*60)`n>>> $($args -join ' ')" -ForegroundColor Cyan }
-function Ok    { Write-Host "  ✓ $($args -join ' ')" -ForegroundColor Green }
+function Ok    { Write-Host "  [+] $($args -join ' ')" -ForegroundColor Green }
 function Warn  { Write-Host "  ! $($args -join ' ')" -ForegroundColor Yellow }
-function Fail  { Write-Host "  ✘ $($args -join ' ')" -ForegroundColor Red; exit 1 }
+function Fail  { Write-Host "  [-] $($args -join ' ')" -ForegroundColor Red; exit 1 }
 
 function Test-Command($Name) {
     try   { $null = Get-Command $Name -ErrorAction Stop; return $true }
@@ -197,7 +197,7 @@ Write-Host "Launching containers..." -ForegroundColor Cyan
 wsl -d `$WslDistro -- bash -c "cd '`$WslPath' && docker compose up -d"
 
 if (`$LASTEXITCODE -eq 0) {
-    Write-Host "✓ POS server is running" -ForegroundColor Green
+    Write-Host "[+] POS server is running" -ForegroundColor Green
 } else {
     Write-Host "! Failed to start containers." -ForegroundColor Red
 }
@@ -381,7 +381,7 @@ Write-Host @"
   │  Server:     http://pos-server.local:3001                   │
   │  Docker:     running inside WSL ($wslDistro)
   │  MSI:        $($msi.FullName -replace "^$([regex]::Escape($WindowsProjectDir))", "C:\Tiba-POS")
-  │  Auto-start: ✓ Server  (hides on login, runs in background)
+  │  Auto-start: [+] Server  (hides on login, runs in background)
   │               ⚠ Client  (enable by installing MSI + re-run)
   │                                                            │
   │  What next?                                                │
