@@ -1,80 +1,66 @@
-Good catch — let me lay it out from absolute step zero.
+# POS Setup — Step by Step
 
-## Full Workflow (Start to Finish)
+## Server PC (Windows)
 
 ### Step 0 — Clone the repo
-On the **server PC** (Windows), do this first:
 ```powershell
 git clone https://github.com/TEggnology-HQ/Tiba-POS-System C:\Tiba-POS
 ```
-Now all the scripts (`setup-wsl.ps1`, `setup-pos.ps1`, `build-client.ps1`, `setup-startup.ps1`, `start-server.ps1`) are available at `C:\Tiba-POS\`.
-
-Then:
 
 ---
 
 ### Step 1 — Run `setup-wsl.ps1` (as Admin)
-This sets up the **Docker host**. It:
-- Installs **WSL 2 + Ubuntu** (if missing)
-- Installs **Docker Engine** inside WSL
-
-After it finishes, it tells you to **restart**.
-
-> **Why separate?** WSL install requires a reboot. A single script couldn't continue past the restart.
+Installs **WSL 2 + Ubuntu** and **Docker Engine** inside WSL.
+After it finishes, **restart your PC**.
 
 ---
 
-### Step 2 — Restart the PC
-Needed for WSL to work.
+### Step 2 — Restart
 
 ---
 
 ### Step 3 — Run `setup-pos.ps1` (as Admin)
 This does **everything else**:
 
-| What | Why |
-|---|---|
-| Asks for passwords | Secures Postgres + admin account |
-| Clones repo into WSL (`~/POS`) | Needed for Docker (better perf than `/mnt/c/`) |
-| Creates `.env` | Fills in your passwords |
-| `docker compose up -d` | Starts the server |
-| Installs Node.js, Rust, VS Build Tools | Needed to build the Tauri client |
-| Builds the MSI | Produces the client installer |
-| Sets up auto-start | Server + client launch on boot |
+| Phase | What | Notes |
+|---|---|---|
+| 1 | Asks for passwords | Postgres + admin account |
+| 2 | Opens firewall port 3001 | So client PCs can reach the server |
+| 3 | Clones repo into WSL (`~/POS`) | Better Docker performance |
+| 4 | Creates `.env` | Uses your passwords |
+| 5 | `docker compose up -d` | Starts Postgres + API server |
+| 6 | Creates `start-server.ps1` | With your WSL paths baked in |
+| 7 | Installs build tools | Node.js, Rust, VS Build Tools (via winget) |
+| 8 | Builds the MSI | Produces the client installer |
+| 9 | Auto-start server | `start-server.ps1` runs hidden on login |
+| 10 | Auto-start client | Only if MSI is already installed |
 
-After this, your **server PC is fully ready** — Postgres + API are running, MSI is built, everything starts automatically on boot.
+After this, your **server PC is fully ready**:
+- Postgres + API are running
+- MSI is built at `C:\Tiba-POS\client\src-tauri\target\release\bundle\msi\`
+- Server starts automatically on boot (background, hidden window)
+- Client starts automatically on login (if MSI was installed)
 
 ---
 
 ### Step 4 — Distribute the MSI to client PCs
-Grab the MSI from:
-```
-C:\Tiba-POS\client\src-tauri\target\release\bundle\msi\Tiba POS_1.0.0_x64_en-US.msi
-```
-Put it on a USB or network share. **Each client PC:**
-1. Run the `.msi`
-2. Open app → Settings → Server URL → `http://pos-server.local:3001`
+Copy the `.msi` to a USB or network share. **Each client PC:**
+1. Run the `.msi` (takes ~10 seconds)
+2. Open the app → Settings → Server URL → `http://pos-server.local:3001`
 3. Test connection → Save
-4. (Optional) Run `setup-startup.ps1` if they want auto-start
+4. (Optional) Copy `setup-startup.ps1` from the server and run it if you want the POS to open on login
+
+**Client PCs don't need:** WSL, Docker, Node.js, Rust, VS Build Tools, or any scripts besides the `.msi`.
 
 ---
 
-### That's it. 4 steps.
+## Scripts Reference
 
-The scripts automate everything except the initial `git clone`. Want me to build them out?
-
-
-
-# 1. Clone
-git clone https://github.com/TEggnology-HQ/Tiba-POS-System C:\Tiba-POS
-
-# 2. Run as Administrator → installs WSL + Docker → tells you to restart
-C:\Tiba-POS\setup-wsl.ps1
-
-# 3. Restart PC
-
-# 4. Run as Administrator → everything else (prompts for passwords, builds MSI, etc.)
-C:\Tiba-POS\setup-pos.ps1
-After step 4, the server is running, the MSI is built, and both server + client auto-start on login.
-For Client PCs
-Just copy the .msi from C:\Tiba-POS\client\src-tauri\target\release\bundle\msi\ and run it. Nothing else needed.
+| Script | Purpose | Where to run |
+|---|---|---|
+| `setup-wsl.ps1` | Phase 1 — WSL + Docker Engine | Server PC, as Admin, then restart |
+| `setup-pos.ps1` | Phase 2 — everything else | Server PC, as Admin, after restart |
+| `start-server.ps1` | Start Docker + containers (auto-generated) | Auto-run via startup shortcut |
+| `build-client.ps1` | Rebuild MSI (standalone, no config needed) | Any Windows PC with build tools |
+| `setup-startup.ps1` | Toggle client auto-start on/off | Any client PC (optional) |
+| `setup-firewall.ps1` | Open port 3001 in Windows Firewall | Integrated into setup-pos.ps1 |

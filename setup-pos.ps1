@@ -82,7 +82,29 @@ if ($confirm -eq "n" -or $confirm -eq "N") {
 }
 
 # =====================================================================
-# PHASE 2 — CLONE REPO INTO WSL
+# PHASE 2 — OPEN FIREWALL PORT 3001
+# =====================================================================
+Step "Opening firewall port 3001"
+$fwScript = "$WindowsProjectDir\setup-firewall.ps1"
+if (Test-Path $fwScript) {
+    & $fwScript
+    if ($LASTEXITCODE -ne 0) { Warn "Firewall rule may already exist or failed — continuing anyway." }
+    Ok "Firewall port 3001 opened"
+} else {
+    # Manual fallback
+    Warn "setup-firewall.ps1 not found — creating rule manually..."
+    Remove-NetFirewallRule -DisplayName "POS_Server_Port_3001" -ErrorAction SilentlyContinue
+    New-NetFirewallRule -DisplayName "POS_Server_Port_3001" `
+                        -Direction Inbound `
+                        -LocalPort 3001 `
+                        -Protocol TCP `
+                        -Action Allow `
+                        -Description "Allows incoming traffic for the POS Server API"
+    Ok "Firewall port 3001 opened"
+}
+
+# =====================================================================
+# PHASE 3 — CLONE REPO INTO WSL
 # =====================================================================
 Step "Cloning repo into WSL"
 wsl -d $wslDistro -- bash -c "
@@ -98,7 +120,7 @@ if ($LASTEXITCODE -ne 0) { Fail "Failed to clone/pull repo inside WSL." }
 Ok "Repo ready at $wslPath"
 
 # =====================================================================
-# PHASE 3 — CREATE .ENV
+# PHASE 4 — CREATE .ENV
 # =====================================================================
 Step "Creating .env file"
 
@@ -137,7 +159,7 @@ if ($LASTEXITCODE -ne 0) { Fail "Failed to write .env inside WSL." }
 Ok ".env written to WSL: $wslPath/.env"
 
 # =====================================================================
-# PHASE 4 — START DOCKER CONTAINERS
+# PHASE 5 — START DOCKER CONTAINERS
 # =====================================================================
 Step "Starting Docker containers"
 Write-Host "Starting Docker daemon..." -ForegroundColor White
@@ -154,7 +176,7 @@ wsl -d $wslDistro -- docker ps --format "table {{.Names}}\t{{.Status}}"
 Ok "Server containers are running"
 
 # =====================================================================
-# PHASE 5 — CREATE START-SERVER.PS1
+# PHASE 6 — CREATE START-SERVER.PS1
 # =====================================================================
 Step "Creating start-server.ps1"
 $serverScript = @"
@@ -185,11 +207,11 @@ $serverScript | Out-File -FilePath $serverScriptPath -Encoding utf8 -Force
 Ok "Created $serverScriptPath"
 
 # =====================================================================
-# PHASE 6 — INSTALL WINDOWS BUILD TOOLS
+# PHASE 7 — INSTALL WINDOWS BUILD TOOLS
 # =====================================================================
 Step "Installing Windows build tools (Node.js, Rust, VS Build Tools)"
 
-# ── 6a. Node.js ──
+# ── 7a. Node.js ──
 Write-Host "Checking Node.js..." -ForegroundColor White
 if (Test-Command node) {
     Ok "Node.js $(node --version) already installed"
@@ -202,7 +224,7 @@ if (Test-Command node) {
     Ok "Node.js $(node --version) installed"
 }
 
-# ── 6b. Rust ──
+# ── 7b. Rust ──
 Write-Host "Checking Rust..." -ForegroundColor White
 if (Test-Command rustc) {
     Ok "Rust $(rustc --version) already installed"
@@ -216,7 +238,7 @@ if (Test-Command rustc) {
     Ok "Rust $(rustc --version) installed"
 }
 
-# ── 6c. VS Build Tools ──
+# ── 7c. VS Build Tools ──
 Write-Host "Checking Visual Studio Build Tools..." -ForegroundColor White
 $clPaths = @(
     "$env:ProgramFiles\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\*\bin\Hostx64\x64\cl.exe",
@@ -264,7 +286,7 @@ if ($clFound) {
     Ok "VS Build Tools with C++ workload installed"
 }
 
-# ── 6d. WebView2 check ──
+# ── 7d. WebView2 check ──
 $webview = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" -ErrorAction SilentlyContinue
 if ($webview) {
     Ok "WebView2 found"
@@ -273,7 +295,7 @@ if ($webview) {
 }
 
 # =====================================================================
-# PHASE 7 — BUILD TAURI CLIENT
+# PHASE 8 — BUILD TAURI CLIENT
 # =====================================================================
 Step "Building Tauri client"
 $clientDir = "$WindowsProjectDir\client"
@@ -315,7 +337,7 @@ if ($msi) {
 }
 
 # =====================================================================
-# PHASE 8 — SET UP AUTO-START (SERVER)
+# PHASE 9 — SET UP AUTO-START (SERVER)
 # =====================================================================
 Step "Setting up auto-start (server)"
 $serverLnkPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Tiba Server.lnk"
@@ -329,7 +351,7 @@ $shortcut.Save()
 Ok "Server auto-start added: $serverLnkPath"
 
 # =====================================================================
-# PHASE 9 — SET UP AUTO-START (CLIENT)
+# PHASE 10 — SET UP AUTO-START (CLIENT)
 # =====================================================================
 Step "Setting up auto-start (client)"
 $clientExe = "C:\Program Files\Tiba POS\Tiba POS.exe"
@@ -369,6 +391,8 @@ Write-Host @"
   │  4. Test connection → Save                                 │
   │                                                            │
   │  Client PCs just need the .msi file — nothing else.        │
+  │  (Optional: copy setup-startup.ps1 to client PCs if       │
+  │   you want the POS app to open on login there too.)        │
   └────────────────────────────────────────────────────────────┘
 "@ -ForegroundColor Green
 
