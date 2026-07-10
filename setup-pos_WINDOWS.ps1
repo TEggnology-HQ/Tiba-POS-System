@@ -12,7 +12,7 @@ param(
 $ErrorActionPreference = "Stop"
 $ScriptRoot = Split-Path -Parent $PSCommandPath
 
-# ── helpers ──────────────────────────────────────────────────────────
+# -- helpers ----------------------------------------------------------
 function Step  { Write-Host "`n$('='*60)`n>>> $($args -join ' ')" -ForegroundColor Cyan }
 function Ok    { Write-Host "  [+] $($args -join ' ')" -ForegroundColor Green }
 function Warn  { Write-Host "  ! $($args -join ' ')" -ForegroundColor Yellow }
@@ -43,13 +43,13 @@ function Prompt-Password($Label) {
 
 $IsAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-# ── ensure admin ────────────────────────────────────────────────────
+# -- ensure admin ----------------------------------------------------
 if (-not $IsAdmin) {
-    Fail "Run this script as Administrator (right-click → Run as Administrator)."
+    Fail "Run this script as Administrator (right-click -> Run as Administrator)."
 }
 
 # =====================================================================
-# PHASE 1 — COLLECT CONFIGURATION
+# PHASE 1 -- COLLECT CONFIGURATION
 # =====================================================================
 Step "Configuration"
 Write-Host "We need a few details to set up the POS system.`n" -ForegroundColor White
@@ -59,21 +59,21 @@ $wslDistro = Read-Host "WSL distribution name" -Default "Ubuntu"
 $wslPath   = Read-Host "Project path inside WSL" -Default "~/POS"
 $adminUser = Read-Host "Initial admin username" -Default "admin"
 
-Write-Host "`n── Set passwords ──" -ForegroundColor Yellow
-Write-Host "  • PostgreSQL password: used for the database (change from default!)"
-Write-Host "  • Admin password: used to log into the POS app (change from default!)`n"
+Write-Host "`n-- Set passwords --" -ForegroundColor Yellow
+Write-Host "  * PostgreSQL password: used for the database (change from default!)"
+Write-Host "  * Admin password: used to log into the POS app (change from default!)`n"
 $pgPassword  = Prompt-Password "PostgreSQL password"
 $adminPass   = Prompt-Password "Admin password"
 
 Write-Host @"
 
-  ┌─────────────────────────────────────────────┐
-  │  Repo:   $repoUrl
-  │  WSL:    $wslDistro
-  │  WSL →   $wslPath
-  │  Admin:  $adminUser / ********
-  │  DB:     postgres / ********
-  └─────────────────────────────────────────────┘
+  +---------------------------------------------+
+  |  Repo:   $repoUrl
+  |  WSL:    $wslDistro
+  |  WSL ->   $wslPath
+  |  Admin:  $adminUser / ********
+  |  DB:     postgres / ********
+  +---------------------------------------------+
 "@ -ForegroundColor Cyan
 $confirm = Read-Host "Proceed with these settings? (Y/n)"
 if ($confirm -eq "n" -or $confirm -eq "N") {
@@ -81,18 +81,18 @@ if ($confirm -eq "n" -or $confirm -eq "N") {
 }
 
 # =====================================================================
-# PHASE 2 — PRE-CHECKS
+# PHASE 2 -- PRE-CHECKS
 # =====================================================================
 Step "Running pre-checks"
 
-# ── winget available ──
+# -- winget available --
 Write-Host "  Checking winget..." -ForegroundColor White
 if (-not (Test-Command winget)) {
     Fail "winget not found. This script requires Windows Package Manager (winget)."
 }
 Ok "winget is available"
 
-# ── WSL distro available ──
+# -- WSL distro available --
 Write-Host "  Checking WSL distro '$wslDistro'..." -ForegroundColor White
 $distros = & wsl --list --quiet 2>$null | ForEach-Object { $_.Trim() }
 if ($distros -notcontains $wslDistro) {
@@ -100,7 +100,7 @@ if ($distros -notcontains $wslDistro) {
 }
 Ok "WSL distro '$wslDistro' exists"
 
-# ── Docker inside WSL ──
+# -- Docker inside WSL --
 Write-Host "  Checking Docker inside WSL..." -ForegroundColor White
 $dockerCheck = & wsl -d $wslDistro -- which docker 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -108,7 +108,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 Ok "Docker is available inside WSL"
 
-# ── Project dir exists on Windows ──
+# -- Project dir exists on Windows --
 Write-Host "  Checking project directory..." -ForegroundColor White
 if (-not (Test-Path "$WindowsProjectDir\client")) {
     Fail "Client directory not found at $WindowsProjectDir\client. Is the repo cloned?"
@@ -116,17 +116,17 @@ if (-not (Test-Path "$WindowsProjectDir\client")) {
 Ok "Project directory found at $WindowsProjectDir"
 
 # =====================================================================
-# PHASE 4 — OPEN FIREWALL (PORT 3001)
+# PHASE 4 -- OPEN FIREWALL (PORT 3001)
 # =====================================================================
 Step "Opening firewall port 3001"
 $fwScript = "$WindowsProjectDir\setup-firewall.ps1"
 if (Test-Path $fwScript) {
     & $fwScript
-    if ($LASTEXITCODE -ne 0) { Warn "Firewall rule may already exist or failed — continuing anyway." }
+    if ($LASTEXITCODE -ne 0) { Warn "Firewall rule may already exist or failed -- continuing anyway." }
     Ok "Firewall port 3001 opened"
 } else {
     # Manual fallback
-    Warn "setup-firewall.ps1 not found — creating rule manually..."
+    Warn "setup-firewall.ps1 not found -- creating rule manually..."
     Remove-NetFirewallRule -DisplayName "POS_Server_Port_3001" -ErrorAction SilentlyContinue
     New-NetFirewallRule -DisplayName "POS_Server_Port_3001" `
                         -Direction Inbound `
@@ -138,12 +138,12 @@ if (Test-Path $fwScript) {
 }
 
 # =====================================================================
-# PHASE 5 — CLONE REPO INTO WSL
+# PHASE 5 -- CLONE REPO INTO WSL
 # =====================================================================
 Step "Cloning repo into WSL"
 wsl -d $wslDistro -- bash -c "
     if [ -d '$wslPath/.git' ]; then
-        echo 'Repo already exists — pulling latest...'
+        echo 'Repo already exists -- pulling latest...'
         cd '$wslPath' && git pull
     else
         echo 'Cloning...'
@@ -154,7 +154,7 @@ if ($LASTEXITCODE -ne 0) { Fail "Failed to clone/pull repo inside WSL." }
 Ok "Repo ready at $wslPath"
 
 # =====================================================================
-# PHASE 6 — CREATE .ENV
+# PHASE 6 -- CREATE .ENV
 # =====================================================================
 Step "Creating .env file"
 
@@ -193,7 +193,7 @@ if ($LASTEXITCODE -ne 0) { Fail "Failed to write .env inside WSL." }
 Ok ".env written to WSL: $wslPath/.env"
 
 # =====================================================================
-# PHASE 7 — START DOCKER CONTAINERS
+# PHASE 7 -- START DOCKER CONTAINERS
 # =====================================================================
 Step "Starting Docker containers"
 Write-Host "Starting Docker daemon..." -ForegroundColor White
@@ -210,14 +210,14 @@ wsl -d $wslDistro -- docker ps --format "table {{.Names}}\t{{.Status}}"
 Ok "Server containers are running"
 
 # =====================================================================
-# PHASE 8 — CREATE START-SERVER.PS1
+# PHASE 8 -- CREATE START-SERVER.PS1
 # =====================================================================
 Step "Creating start-server.ps1"
 $serverScript = @"
 <#
 .SYNOPSIS
   Starts Docker Engine in WSL and launches POS server containers.
-  Auto-generated by setup-pos_WINDOWS.ps1 — do not edit manually.
+  Auto-generated by setup-pos_WINDOWS.ps1 -- do not edit manually.
 #>
 
 `$WslDistro  = "$wslDistro"
@@ -241,11 +241,11 @@ $serverScript | Out-File -FilePath $serverScriptPath -Encoding utf8 -Force
 Ok "Created $serverScriptPath"
 
 # =====================================================================
-# PHASE 9 — INSTALL WINDOWS BUILD TOOLS
+# PHASE 9 -- INSTALL WINDOWS BUILD TOOLS
 # =====================================================================
 Step "Installing Windows build tools (Node.js, Rust, VS Build Tools)"
 
-# ── 9a. Node.js ──
+# -- 9a. Node.js --
 Write-Host "Checking Node.js..." -ForegroundColor White
 if (Test-Command node) {
     Ok "Node.js $(node --version) already installed"
@@ -258,7 +258,7 @@ if (Test-Command node) {
     Ok "Node.js $(node --version) installed"
 }
 
-# ── 9b. Rust ──
+# -- 9b. Rust --
 Write-Host "Checking Rust..." -ForegroundColor White
 if (Test-Command rustc) {
     Ok "Rust $(rustc --version) already installed"
@@ -272,7 +272,7 @@ if (Test-Command rustc) {
     Ok "Rust $(rustc --version) installed"
 }
 
-# ── 9c. VS Build Tools ──
+# -- 9c. VS Build Tools --
 Write-Host "Checking Visual Studio Build Tools..." -ForegroundColor White
 $clPaths = @(
     "$env:ProgramFiles\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\*\bin\Hostx64\x64\cl.exe",
@@ -320,7 +320,7 @@ if ($clFound) {
     Ok "VS Build Tools with C++ workload installed"
 }
 
-# ── 9d. WebView2 check ──
+# -- 9d. WebView2 check --
 $webview = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" -ErrorAction SilentlyContinue
 if ($webview) {
     Ok "WebView2 found"
@@ -329,7 +329,7 @@ if ($webview) {
 }
 
 # =====================================================================
-# PHASE 10 — BUILD TAURI CLIENT
+# PHASE 10 -- BUILD TAURI CLIENT
 # =====================================================================
 Step "Building Tauri client"
 $clientDir = "$WindowsProjectDir\client"
@@ -355,23 +355,18 @@ try {
 $msi = Get-ChildItem "$clientDir\src-tauri\target\release\bundle\msi\*.msi" -ErrorAction SilentlyContinue |
        Select-Object -First 1
 if ($msi) {
-    Write-Host @"
-
-  ┌────────────────────────────────────────────────────────────┐
-  │  ✅ MSI built successfully!                                │
-  │                                                            │
-  │  Location: $($msi.FullName)
-  │  Size:     $('{0:N1} MB' -f ($msi.Length / 1MB))
-  │                                                            │
-  │  Copy this .msi to client PCs and run it.                  │
-  └────────────────────────────────────────────────────────────┘
-"@ -ForegroundColor Green
+    Write-Host ""
+    Write-Host "  [OK] MSI built successfully!" -ForegroundColor Green
+    Write-Host "  Location: $($msi.FullName)" -ForegroundColor Green
+    Write-Host "  Size:     $('{0:N1} MB' -f ($msi.Length / 1MB))" -ForegroundColor Green
+    Write-Host "  Copy this .msi to client PCs and run it." -ForegroundColor Green
+    Write-Host ""
 } else {
     Warn "Could not locate MSI. Check $clientDir\src-tauri\target\release\bundle\msi\"
 }
 
 # =====================================================================
-# PHASE 11 — SET UP AUTO-START (SERVER)
+# PHASE 11 -- SET UP AUTO-START (SERVER)
 # =====================================================================
 Step "Setting up auto-start (server)"
 $serverLnkPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Tiba Server.lnk"
@@ -379,13 +374,13 @@ $WScriptShell = New-Object -ComObject WScript.Shell
 $shortcut = $WScriptShell.CreateShortcut($serverLnkPath)
 $shortcut.TargetPath = "powershell.exe"
 $shortcut.Arguments = "-WindowStyle Hidden -File ""$WindowsProjectDir\start-server.ps1"""
-$shortcut.Description = "Tiba POS — starts Docker + server containers"
+$shortcut.Description = "Tiba POS -- starts Docker + server containers"
 $shortcut.WorkingDirectory = "$WindowsProjectDir"
 $shortcut.Save()
 Ok "Server auto-start added: $serverLnkPath"
 
 # =====================================================================
-# PHASE 12 — SET UP AUTO-START (CLIENT)
+# PHASE 12 -- SET UP AUTO-START (CLIENT)
 # =====================================================================
 Step "Setting up auto-start (client)"
 $clientExe = "C:\Program Files\Tiba POS\Tiba POS.exe"
@@ -393,7 +388,7 @@ $clientLnkPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Tib
 if (Test-Path $clientExe) {
     $shortcut2 = $WScriptShell.CreateShortcut($clientLnkPath)
     $shortcut2.TargetPath = $clientExe
-    $shortcut2.Description = "Tiba POS — Point of Sale System"
+    $shortcut2.Description = "Tiba POS -- Point of Sale System"
     $shortcut2.WorkingDirectory = "C:\Program Files\Tiba POS"
     $shortcut2.Save()
     Ok "Client auto-start added: $clientLnkPath"
@@ -409,25 +404,25 @@ if (Test-Path $clientExe) {
 Step "Setup complete!"
 Write-Host @"
 
-  ┌────────────────────────────────────────────────────────────┐
-  │  ✅ POS system is ready!                                   │
-  │                                                            │
-  │  Server:     http://pos-server.local:3001                   │
-  │  Docker:     running inside WSL ($wslDistro)
-  │  MSI:        $($msi.FullName -replace "^$([regex]::Escape($WindowsProjectDir))", "C:\Tiba-POS")
-  │  Auto-start: [+] Server  (hides on login, runs in background)
-  │               ⚠ Client  (enable by installing MSI + re-run)
-  │                                                            │
-  │  What next?                                                │
-  │  1. Open the POS app on this PC (or distribute the MSI)    │
-  │  2. Go to Admin → Server Settings                          │
-  │  3. Server URL: http://pos-server.local:3001                │
-  │  4. Test connection → Save                                 │
-  │                                                            │
-  │  Client PCs just need the .msi file — nothing else.        │
-  │  (Optional: copy setup-startup.ps1 to client PCs if       │
-  │   you want the POS app to open on login there too.)        │
-  └────────────────────────────────────────────────────────────┘
+  +------------------------------------------------------------+
+  |  [OK] POS system is ready!                                   |
+  |                                                            |
+  |  Server:     http://pos-server.local:3001                   |
+  |  Docker:     running inside WSL ($wslDistro)
+  |  MSI:        $($msi.FullName -replace "^$([regex]::Escape($WindowsProjectDir))", "C:\Tiba-POS")
+  |  Auto-start: [+] Server  (hides on login, runs in background)
+  |               [!] Client  (enable by installing MSI + re-run)
+  |                                                            |
+  |  What next?                                                |
+  |  1. Open the POS app on this PC (or distribute the MSI)    |
+  |  2. Go to Admin -> Server Settings                          |
+  |  3. Server URL: http://pos-server.local:3001                |
+  |  4. Test connection -> Save                                 |
+  |                                                            |
+  |  Client PCs just need the .msi file -- nothing else.        |
+  |  (Optional: copy setup-startup.ps1 to client PCs if       |
+  |   you want the POS app to open on login there too.)        |
+  +------------------------------------------------------------+
 "@ -ForegroundColor Green
 
 Read-Host "`nPress Enter to exit"

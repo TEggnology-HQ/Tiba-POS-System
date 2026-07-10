@@ -65,3 +65,47 @@ Copy the `.msi` to a USB or network share. **Each client PC:**
 | `build-client.ps1` | Rebuild MSI (standalone, no config needed) | Any Windows PC with build tools |
 | `setup-startup.ps1` | Toggle client auto-start on/off | Any client PC (optional) |
 | `setup-firewall.ps1` | Open port 3001 in Windows Firewall | Integrated into setup-pos_WINDOWS.ps1 |
+
+
+Sure. Here's the manual way from scratch on Windows:
+Manual Setup (No Scripts)
+1. WSL + Docker
+# As Admin:
+wsl --install -d Ubuntu
+wsl --set-default-version 2
+# Restart PC
+
+# Inside WSL (Ubuntu):
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+exit
+# Re-open WSL
+2. Clone & Configure
+# In Windows:
+git clone https://github.com/TEggnology-HQ/Tiba-POS-System C:\Tiba-POS
+
+# In WSL:
+cd ~
+git clone https://github.com/TEggnology-HQ/Tiba-POS-System POS
+cd ~/POS
+cp .env.example .env
+nano .env  # change passwords
+docker compose up -d
+3. Open Firewall
+# In Windows (as Admin):
+C:\Tiba-POS\setup-firewall.ps1
+4. Build Client
+# Install: Node.js (winget install OpenJS.NodeJS.LTS)
+# Install: Rust (winget install Rustlang.Rustup)
+# Install: VS Build Tools with C++ workload
+
+cd C:\Tiba-POS\client
+npm install
+npm run tauri:build
+# MSI at: src-tauri\target\release\bundle\msi\
+5. Auto-Start
+Server — create C:\Users\<you>\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Tiba Server.lnk targeting:
+powershell.exe -WindowStyle Hidden -Command "wsl -d Ubuntu -- sudo service docker start; wsl -d Ubuntu -- docker compose -f ~/POS/docker-compose.yml up -d"
+Client — create shell:startup shortcut to C:\Program Files\Tiba POS\Tiba POS.exe
+6. Client PCs
+Copy the .msi to each machine, install, point to http://pos-server.local:3001.

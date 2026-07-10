@@ -46,4 +46,4 @@ $shortcut.Save()
 
 Write-Host "[+] Startup entry created at:" -ForegroundColor Green
 Write-Host "  $shortcutPath" -ForegroundColor White
-Write-Host "  → $TargetPath" -ForegroundColor Gray
+Write-Host "  -> $TargetPath" -ForegroundColor Gray
