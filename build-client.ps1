@@ -39,8 +39,7 @@ function Refresh-Path {
     $env:Path = "$machine;$user;$env:Path"
 }
 
-$IsAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent())
-    .IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+$IsAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 # ── 1. Node.js ───────────────────────────────────────────────────────
 Step "Checking Node.js"

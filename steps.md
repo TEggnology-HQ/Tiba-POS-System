@@ -9,7 +9,7 @@ git clone https://github.com/TEggnology-HQ/Tiba-POS-System C:\Tiba-POS
 
 ---
 
-### Step 1 — Run `setup-wsl.ps1` (as Admin)
+### Step 1 — Run `setup-wsl_WINDOWS.ps1` (as Admin)
 Installs **WSL 2 + Ubuntu** and **Docker Engine** inside WSL.
 After it finishes, **restart your PC**.
 
@@ -19,21 +19,22 @@ After it finishes, **restart your PC**.
 
 ---
 
-### Step 3 — Run `setup-pos.ps1` (as Admin)
+### Step 3 — Run `setup-pos_WINDOWS.ps1` (as Admin)
 This does **everything else**:
 
 | Phase | What | Notes |
 |---|---|---|
 | 1 | Asks for passwords | Postgres + admin account |
-| 2 | Opens firewall port 3001 | So client PCs can reach the server |
-| 3 | Clones repo into WSL (`~/POS`) | Better Docker performance |
-| 4 | Creates `.env` | Uses your passwords |
-| 5 | `docker compose up -d` | Starts Postgres + API server |
-| 6 | Creates `start-server.ps1` | With your WSL paths baked in |
-| 7 | Installs build tools | Node.js, Rust, VS Build Tools (via winget) |
-| 8 | Builds the MSI | Produces the client installer |
-| 9 | Auto-start server | `start-server.ps1` runs hidden on login |
-| 10 | Auto-start client | Only if MSI is already installed |
+| 2 | Pre-checks | winget, WSL, Docker, project dir |
+| 3 | Opens firewall port 3001 | So client PCs can reach the server |
+| 4 | Clones repo into WSL (`~/POS`) | Better Docker performance |
+| 5 | Creates `.env` | Uses your passwords |
+| 6 | `docker compose up -d` | Starts Postgres + API server |
+| 7 | Creates `start-server.ps1` | With your WSL paths baked in |
+| 8 | Installs build tools | Node.js, Rust, VS Build Tools (via winget) |
+| 9 | Builds the MSI | Produces the client installer |
+| 10 | Auto-start server | `start-server.ps1` runs hidden on login |
+| 11 | Auto-start client | Only if MSI is already installed |
 
 After this, your **server PC is fully ready**:
 - Postgres + API are running
@@ -58,9 +59,9 @@ Copy the `.msi` to a USB or network share. **Each client PC:**
 
 | Script | Purpose | Where to run |
 |---|---|---|
-| `setup-wsl.ps1` | Phase 1 — WSL + Docker Engine | Server PC, as Admin, then restart |
-| `setup-pos.ps1` | Phase 2 — everything else | Server PC, as Admin, after restart |
+| `setup-wsl_WINDOWS.ps1` | Phase 1 — WSL + Docker Engine | Server PC, as Admin, then restart |
+| `setup-pos_WINDOWS.ps1` | Phase 2 — everything else | Server PC, as Admin, after restart |
 | `start-server.ps1` | Start Docker + containers (auto-generated) | Auto-run via startup shortcut |
 | `build-client.ps1` | Rebuild MSI (standalone, no config needed) | Any Windows PC with build tools |
 | `setup-startup.ps1` | Toggle client auto-start on/off | Any client PC (optional) |
-| `setup-firewall.ps1` | Open port 3001 in Windows Firewall | Integrated into setup-pos.ps1 |
+| `setup-firewall.ps1` | Open port 3001 in Windows Firewall | Integrated into setup-pos_WINDOWS.ps1 |
