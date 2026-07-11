@@ -434,10 +434,9 @@ Write-Host @"
   +------------------------------------------------------------+
   |  [OK] POS system is ready!                                   |
   |                                                            |
-  |  Server:     http://pos-server.local:3001                   |
-  |              (also accessible via LAN -- portproxy active)  |
+  |  Server:     http://192.168.1.200:3001                      |
+  |              (set static IP on router -- see steps.md)      |
   |  Docker:     running inside WSL ($wslDistro)
-  |  mDNS:       install Bonjour for pos-server.local (see steps.md) |
   |  MSI:        $($msi.FullName -replace "^$([regex]::Escape($WindowsProjectDir))", "C:\Tiba-POS")
   |  Auto-start: [+] Server  (hides on login, runs in background)
   |               [!] Client  (enable by installing MSI + re-run)
@@ -445,7 +444,7 @@ Write-Host @"
   |  What next?                                                |
   |  1. Open the POS app on this PC (or distribute the MSI)    |
   |  2. Go to Admin -> Server Settings                          |
-  |  3. Server URL: http://pos-server.local:3001                |
+  |  3. Server URL: http://192.168.1.200:3001                   |
   |  4. Test connection -> Save                                 |
   |                                                            |
   |  Client PCs just need the .msi file -- nothing else.        |

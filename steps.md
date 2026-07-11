@@ -53,30 +53,23 @@ nano .env          # change POSTGRES_PASSWORD and INITIAL_OWNER_PASSWORD
 docker compose up -d
 ```
 
-#### 3. Make Server Reachable (mDNS / Bonjour)
+#### 3. Set Static IP on Server PC
 
-Client PCs access the server as `http://pos-server.local:3001`. To make `.local` names resolve on the LAN:
+Assign the server PC a fixed IP so clients can always find it:
 
-**Install Bonjour for Windows (5 MB):**
-```powershell
-# PowerShell (as Admin):
-winget install Apple.BonjourPrintServices
-# Or download from https://support.apple.com/kb/DL999
+1. Open **Router admin page** (usually `http://192.168.1.1`)
+2. Find **DHCP Reservation** or **Static Lease**
+3. Assign `192.168.1.200` to the server PC's MAC address
+4. **Restart** the server PC
+
+Alternatively, set it in Windows:
 ```
-
-**Register `pos-server.local` temporarily** (for testing):
-```powershell
-dns-sd -R "Tiba POS" _http._tcp . 3001
-# Keep this window open — pos-server.local:3001 is now live on the LAN
+Settings → Network & Internet → Ethernet → IP assignment → Edit → Manual
+IP: 192.168.1.200
+Subnet: 255.255.255.0
+Gateway: 192.168.1.1
+DNS: 8.8.8.8
 ```
-
-**Make it permanent** (auto-start on login):
-Create a shortcut in `shell:startup` targeting:
-```
-C:\Windows\System32\dns-sd.exe -R "Tiba POS" _http._tcp . 3001
-```
-
-> The `dns-sd` command runs in the foreground, so the shortcut window stays open (minimized to tray).
 
 #### 4. Firewall
 ```powershell
@@ -115,12 +108,6 @@ npm run tauri:build
 
 #### 6. Auto-Start (Server)
 
-**Bonjour mDNS (required for `pos-server.local`):**
-Create a shortcut in `shell:startup` targeting:
-```
-C:\Windows\System32\dns-sd.exe -R "Tiba POS" _http._tcp . 3001
-```
-
 **Option A — Task Scheduler (recommended for Docker):**
 ```powershell
 # PowerShell (as Admin):
@@ -155,7 +142,7 @@ Or run: `C:\Tiba-POS\setup-startup.ps1`
 Copy the `.msi` from `C:\Tiba-POS\client\src-tauri\target\release\bundle\msi\` to each machine.
 
 1. Run the `.msi` installer
-2. Open app → Settings → Server URL: `http://pos-server.local:3001`
+2. Open app → Settings → Server URL: `http://192.168.1.200:3001`
 3. Test connection → Save
 4. (Optional) Run `setup-startup.ps1` for auto-start
 
@@ -173,4 +160,3 @@ Copy the `.msi` from `C:\Tiba-POS\client\src-tauri\target\release\bundle\msi\` t
 | `build-client.ps1` | Rebuild MSI standalone | Any Windows PC with build tools |
 | `setup-startup.ps1` | Toggle client auto-start | Any client PC (optional) |
 | `setup-firewall.ps1` | Open port 3001 | Server PC, as Admin |
-| Bonjour for Windows | mDNS (`pos-server.local`) | Server PC — `winget install Apple.BonjourPrintServices` |

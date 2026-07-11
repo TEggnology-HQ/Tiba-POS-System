@@ -5,7 +5,7 @@ import { tauriService } from '../lib/tauriService';
 
 export default function Settings() {
   const { t } = useTranslation();
-  const [serverUrl, setServerUrl] = useState('http://pos-server.local:3001');
+  const [serverUrl, setServerUrl] = useState('http://192.168.1.200:3001');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function Settings() {
   };
 
   const handleResetToDefault = () => {
-    setServerUrl('http://pos-server.local:3001');
+    setServerUrl('http://192.168.1.200:3001');
   };
 
   return (
@@ -71,7 +71,7 @@ export default function Settings() {
             type="text"
             value={serverUrl}
             onChange={(e) => setServerUrl(e.target.value)}
-            placeholder="http://pos-server.local:3001"
+            placeholder="http://192.168.1.200:3001"
             className="settings-input"
           />
           <button onClick={handleTestConnection} className="test-btn">
