@@ -193,7 +193,23 @@ if ($LASTEXITCODE -ne 0) { Fail "Failed to write .env inside WSL." }
 Ok ".env written to WSL: $wslPath/.env"
 
 # =====================================================================
-# PHASE 7 -- START DOCKER CONTAINERS
+# PHASE 7 -- PORT PROXY (LAN ACCESS)
+# =====================================================================
+Step "Setting up port proxy for LAN access"
+$wslIpRaw = & wsl -d $wslDistro -- hostname -I 2>&1
+$wslIp = ($wslIpRaw -split '\s+')[0].Trim()
+if ($wslIp -match '^\d+\.\d+\.\d+\.\d+$') {
+    Write-Host "WSL2 IP: $wslIp" -ForegroundColor White
+    netsh interface portproxy delete v4tov4 listenport=3001 listenaddress=0.0.0.0 2>$null
+    netsh interface portproxy add v4tov4 listenport=3001 listenaddress=0.0.0.0 connectport=3001 connectaddress=$wslIp
+    Ok "Portproxy: 0.0.0.0:3001 -> $wslIp`:3001"
+} else {
+    Warn "Could not determine WSL2 IP. LAN access may not work."
+    Warn "Run later: netsh interface portproxy add v4tov4 listenport=3001 listenaddress=0.0.0.0 connectport=3001 connectaddress=<wsl-ip>"
+}
+
+# =====================================================================
+# PHASE 8 -- START DOCKER CONTAINERS
 # =====================================================================
 Step "Starting Docker containers"
 Write-Host "Starting Docker daemon..." -ForegroundColor White
@@ -210,7 +226,7 @@ wsl -d $wslDistro -- docker ps --format "table {{.Names}}\t{{.Status}}"
 Ok "Server containers are running"
 
 # =====================================================================
-# PHASE 8 -- CREATE START-SERVER.PS1
+# PHASE 9 -- CREATE START-SERVER.PS1
 # =====================================================================
 Step "Creating start-server.ps1"
 $serverScript = @"
@@ -227,6 +243,17 @@ Write-Host "Starting Docker in WSL..." -ForegroundColor Cyan
 wsl -d `$WslDistro -- sudo service docker start
 Start-Sleep 3
 
+Write-Host "Setting up port proxy for LAN access..." -ForegroundColor Cyan
+`$wslIpRaw = & wsl -d `$WslDistro -- hostname -I 2`>`$null
+`$wslIp = (`$wslIpRaw -split '\s+')[0].Trim()
+if (`$wslIp -match '^\d+\.\d+\.\d+\.\d+`$') {
+    netsh interface portproxy delete v4tov4 listenport=3001 listenaddress=0.0.0.0 2>`$null
+    netsh interface portproxy add v4tov4 listenport=3001 listenaddress=0.0.0.0 connectport=3001 connectaddress=`$wslIp
+    Write-Host "  [+] Portproxy: 0.0.0.0:3001 -> `$wslIp`:3001" -ForegroundColor Green
+} else {
+    Write-Host "  [!] Could not determine WSL2 IP -- LAN access may not work." -ForegroundColor Yellow
+}
+
 Write-Host "Launching containers..." -ForegroundColor Cyan
 wsl -d `$WslDistro -- bash -c "cd '`$WslPath' && docker compose up -d"
 
@@ -241,11 +268,11 @@ $serverScript | Out-File -FilePath $serverScriptPath -Encoding utf8 -Force
 Ok "Created $serverScriptPath"
 
 # =====================================================================
-# PHASE 9 -- INSTALL WINDOWS BUILD TOOLS
+# PHASE 10 -- INSTALL WINDOWS BUILD TOOLS
 # =====================================================================
 Step "Installing Windows build tools (Node.js, Rust, VS Build Tools)"
 
-# -- 9a. Node.js --
+# -- 10a. Node.js --
 Write-Host "Checking Node.js..." -ForegroundColor White
 if (Test-Command node) {
     Ok "Node.js $(node --version) already installed"
@@ -258,7 +285,7 @@ if (Test-Command node) {
     Ok "Node.js $(node --version) installed"
 }
 
-# -- 9b. Rust --
+# -- 10b. Rust --
 Write-Host "Checking Rust..." -ForegroundColor White
 if (Test-Command rustc) {
     Ok "Rust $(rustc --version) already installed"
@@ -272,7 +299,7 @@ if (Test-Command rustc) {
     Ok "Rust $(rustc --version) installed"
 }
 
-# -- 9c. VS Build Tools --
+# -- 10c. VS Build Tools --
 Write-Host "Checking Visual Studio Build Tools..." -ForegroundColor White
 $clPaths = @(
     "$env:ProgramFiles\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\*\bin\Hostx64\x64\cl.exe",
@@ -320,7 +347,7 @@ if ($clFound) {
     Ok "VS Build Tools with C++ workload installed"
 }
 
-# -- 9d. WebView2 check --
+# -- 10d. WebView2 check --
 $webview = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" -ErrorAction SilentlyContinue
 if ($webview) {
     Ok "WebView2 found"
@@ -329,7 +356,7 @@ if ($webview) {
 }
 
 # =====================================================================
-# PHASE 10 -- BUILD TAURI CLIENT
+# PHASE 11 -- BUILD TAURI CLIENT
 # =====================================================================
 Step "Building Tauri client"
 $clientDir = "$WindowsProjectDir\client"
@@ -366,7 +393,7 @@ if ($msi) {
 }
 
 # =====================================================================
-# PHASE 11 -- SET UP AUTO-START (SERVER)
+# PHASE 12 -- SET UP AUTO-START (SERVER)
 # =====================================================================
 Step "Setting up auto-start (server)"
 $serverLnkPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Tiba Server.lnk"
@@ -380,7 +407,7 @@ $shortcut.Save()
 Ok "Server auto-start added: $serverLnkPath"
 
 # =====================================================================
-# PHASE 12 -- SET UP AUTO-START (CLIENT)
+# PHASE 13 -- SET UP AUTO-START (CLIENT)
 # =====================================================================
 Step "Setting up auto-start (client)"
 $clientExe = "C:\Program Files\Tiba POS\Tiba POS.exe"
@@ -408,7 +435,9 @@ Write-Host @"
   |  [OK] POS system is ready!                                   |
   |                                                            |
   |  Server:     http://pos-server.local:3001                   |
+  |              (also accessible via LAN -- portproxy active)  |
   |  Docker:     running inside WSL ($wslDistro)
+  |  mDNS:       install Bonjour for pos-server.local (see steps.md) |
   |  MSI:        $($msi.FullName -replace "^$([regex]::Escape($WindowsProjectDir))", "C:\Tiba-POS")
   |  Auto-start: [+] Server  (hides on login, runs in background)
   |               [!] Client  (enable by installing MSI + re-run)

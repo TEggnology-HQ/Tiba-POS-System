@@ -53,14 +53,50 @@ nano .env          # change POSTGRES_PASSWORD and INITIAL_OWNER_PASSWORD
 docker compose up -d
 ```
 
-#### 3. Rename PC
-Settings → About → Rename this PC → `pos-server` → **restart**
+#### 3. Make Server Reachable (mDNS / Bonjour)
+
+Client PCs access the server as `http://pos-server.local:3001`. To make `.local` names resolve on the LAN:
+
+**Install Bonjour for Windows (5 MB):**
+```powershell
+# PowerShell (as Admin):
+winget install Apple.BonjourPrintServices
+# Or download from https://support.apple.com/kb/DL999
+```
+
+**Register `pos-server.local` temporarily** (for testing):
+```powershell
+dns-sd -R "Tiba POS" _http._tcp . 3001
+# Keep this window open — pos-server.local:3001 is now live on the LAN
+```
+
+**Make it permanent** (auto-start on login):
+Create a shortcut in `shell:startup` targeting:
+```
+C:\Windows\System32\dns-sd.exe -R "Tiba POS" _http._tcp . 3001
+```
+
+> The `dns-sd` command runs in the foreground, so the shortcut window stays open (minimized to tray).
 
 #### 4. Firewall
 ```powershell
 # PowerShell (as Admin):
 C:\Tiba-POS\setup-firewall.ps1
 ```
+
+#### 4.5. Port Proxy (LAN Access)
+Docker runs inside WSL2, which uses NAT. Other PCs on the LAN can't reach it directly — you need a portproxy:
+
+```powershell
+# PowerShell (as Admin):
+$wslIp = (wsl -- hostname -I).Trim()
+netsh interface portproxy delete v4tov4 listenport=3001 listenaddress=0.0.0.0
+netsh interface portproxy add v4tov4 listenport=3001 listenaddress=0.0.0.0 connectport=3001 connectaddress=$wslIp
+```
+
+Verify: `netsh interface portproxy show v4tov4`
+
+> The portproxy is re-applied on each login via `start-server.ps1` (if using the automated setup), or add the above to a startup script.
 
 #### 5. Build Client
 ```powershell
@@ -78,7 +114,14 @@ npm run tauri:build
 ```
 
 #### 6. Auto-Start (Server)
-**Option A — Task Scheduler (recommended):**
+
+**Bonjour mDNS (required for `pos-server.local`):**
+Create a shortcut in `shell:startup` targeting:
+```
+C:\Windows\System32\dns-sd.exe -R "Tiba POS" _http._tcp . 3001
+```
+
+**Option A — Task Scheduler (recommended for Docker):**
 ```powershell
 # PowerShell (as Admin):
 $action = New-ScheduledTaskAction -Execute "wsl.exe" -Argument "-d Ubuntu -- sudo service docker start"
@@ -130,3 +173,4 @@ Copy the `.msi` from `C:\Tiba-POS\client\src-tauri\target\release\bundle\msi\` t
 | `build-client.ps1` | Rebuild MSI standalone | Any Windows PC with build tools |
 | `setup-startup.ps1` | Toggle client auto-start | Any client PC (optional) |
 | `setup-firewall.ps1` | Open port 3001 | Server PC, as Admin |
+| Bonjour for Windows | mDNS (`pos-server.local`) | Server PC — `winget install Apple.BonjourPrintServices` |
