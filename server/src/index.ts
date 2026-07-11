@@ -68,16 +68,3 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   await bootstrapOwner();
 });
-
-app.get('/api/roles', async (req, res) => {
-  try {
-    const result = await query('SELECT id, name FROM user_roles ORDER BY id');
-    res.json(result.rows);
-  } catch {
-    res.status(500).json({ error: 'Failed to fetch roles' });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
